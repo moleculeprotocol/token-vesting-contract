@@ -14,9 +14,6 @@ env
 cache/
 out/
 
-lib/*
-!.gitkeep
-
 # Ignores development broadcast logs
 !/broadcast
 /broadcast/*/31337/
