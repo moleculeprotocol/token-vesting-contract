@@ -24,3 +24,5 @@ docs/
 
 # Dotenv file
 .env
+
+!.gitkeep
