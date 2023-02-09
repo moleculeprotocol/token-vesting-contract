@@ -1,3 +1,4 @@
+# hardhat
 node_modules
 build
 contracts/artifacts
@@ -8,3 +9,16 @@ cache
 data
 coverage*
 env
+
+# Compiler files
+cache_forge
+cache/
+out/
+
+# Ignores development broadcast logs
+!/broadcast
+/broadcast/*
+/broadcast/*/31337/
+
+lib/*
+!.gitkeep

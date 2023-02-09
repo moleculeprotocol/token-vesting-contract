@@ -1,0 +1,16 @@
+[profile.default]
+src = 'contracts'
+out = 'out'
+libs = ['lib']
+test = 'test'
+cache_path  = 'cache_forge'
+solc_version = "0.8.11"
+gas_reports = ["TokenVesting"]
+
+
+[fmt]
+bracket_spacing = true
+line_length = 150
+tab_width = 4
+quote_style = 'double'
+func_attrs_with_params_multiline = true
