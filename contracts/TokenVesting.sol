@@ -48,6 +48,8 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     // address of the ERC20 native token
     IERC20 private immutable _nativeToken;
 
+    bool private _releasePaused = false;
+
     bytes32[] private vestingSchedulesIds;
     mapping(bytes32 => VestingSchedule) private vestingSchedules;
     uint256 private vestingSchedulesTotalAmount;
@@ -220,6 +222,14 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     }
 
     /**
+     * @notice Pauses or unpauses the release of tokens
+     * @param releasePaused_ true if the release of tokens should be paused, false otherwise
+     */
+    function setReleasePaused(bool releasePaused_) public onlyOwner {
+        _releasePaused = releasePaused_;
+    }
+
+    /**
      * @notice Sets a new beneficiary for the vesting schedule for given identifier.
      * @param vestingScheduleId the vesting schedule identifier
      * @param newBeneficiary address of the new beneficiary
@@ -248,6 +258,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @param amount the amount to release
      */
     function release(bytes32 vestingScheduleId, uint256 amount) public nonReentrant onlyIfVestingScheduleNotRevoked(vestingScheduleId) {
+        require(_releasePaused == false, "TokenVesting: release is paused");
         VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
         bool isBeneficiary = msg.sender == vestingSchedule.beneficiary;
         bool isOwner = msg.sender == owner();
