@@ -213,6 +213,21 @@ contract TokenVesting is Ownable, ReentrancyGuard {
     }
 
     /**
+     * @notice Computes the total vested amount of tokens for the given address/holder
+     * @return the vested amount
+     */
+    function computeVestedTotalAmountForHolder(address holder) public view returns (uint256) {
+        uint256 vestedTotalAmount = 0;
+        uint256 vestingCount = holdersVestingCount[holder];
+        for (uint256 i = 0; i < vestingCount; i++) {
+            bytes32 vestingScheduleId = computeVestingScheduleIdForAddressAndIndex(holder, i);
+            VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
+            vestedTotalAmount = vestedTotalAmount.add(_computeReleasableAmount(vestingSchedule));
+        }
+        return vestedTotalAmount;
+    }
+
+    /**
      * @notice Returns the vesting schedule information for a given identifier.
      * @return the vesting schedule structure information
      */

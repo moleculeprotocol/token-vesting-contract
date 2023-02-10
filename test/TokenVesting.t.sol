@@ -187,4 +187,21 @@ contract TokenVestingTest is Test {
         vm.expectRevert("TokenVesting: amount must be > 0");
         tokenVesting.createVestingSchedule(alice, baseTime, 0, 1, 1, false, 0);
     }
+
+    function testComputationMultipleForSchedules() public {
+        uint256 baseTime = 1622551248;
+        uint256 duration = 1000;
+
+        vm.startPrank(deployer);
+        token.transfer(address(tokenVesting), 1000 ether);
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, duration * 2, 1, true, 50 ether);
+        vm.stopPrank();
+
+        // set time to half the vesting period
+        uint256 halfTime = baseTime + duration / 2;
+        tokenVesting.setCurrentTime(halfTime);
+
+        assertEq(tokenVesting.computeVestedTotalAmountForHolder(alice), 62.5 ether);
+    }
 }
