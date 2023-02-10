@@ -278,7 +278,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Computes the total vested amount of tokens for the given address/holder
+     * @notice Computes the total vested amount of tokens (schedule total amount minus already released tokens) for the given address/holder
      * @return the vested amount
      */
     function computeVestedAmountForHolder(address holder) public view returns (uint256) {
