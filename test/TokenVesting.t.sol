@@ -125,9 +125,12 @@ contract TokenVestingTest is Test {
     }
 
     function testNonOwnerCannotRevokeSchedule() public {
+        uint256 baseTime = 1622551248;
+        uint256 duration = 1000;
+
         vm.startPrank(deployer);
         token.transfer(address(tokenVesting), 100 ether);
-        tokenVesting.createVestingSchedule(alice, 1622551248, 0, 1000, 1, true, 100 ether);
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
         vm.stopPrank();
 
         bytes32 vestingScheduleId = tokenVesting.computeVestingScheduleIdForAddressAndIndex(alice, 0);
@@ -136,5 +139,52 @@ contract TokenVestingTest is Test {
         vm.expectRevert("Ownable: caller is not the owner");
         tokenVesting.revoke(vestingScheduleId);
         vm.stopPrank();
+    }
+
+    function testRevokeScheduleReleasesVestedTokens() public {
+        uint256 baseTime = 1622551248;
+        uint256 duration = 1000;
+
+        vm.startPrank(deployer);
+        token.transfer(address(tokenVesting), 100 ether);
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
+
+        assertEq(tokenVesting.getWithdrawableAmount(), 0);
+
+        bytes32 vestingScheduleId = tokenVesting.computeVestingScheduleIdForAddressAndIndex(alice, 0);
+
+        // set time to half the vesting period
+        uint256 halfTime = 1622551248 + 1000 / 2;
+        tokenVesting.setCurrentTime(halfTime);
+
+        tokenVesting.revoke(vestingScheduleId);
+        assertEq(token.balanceOf(address(alice)), 50 ether);
+
+        MockTokenVesting.VestingSchedule memory vestingSchedule = tokenVesting.getVestingSchedule(vestingScheduleId);
+        assertEq(vestingSchedule.revoked, true);
+
+        assertEq(tokenVesting.getWithdrawableAmount(), 50 ether);
+    }
+
+    function testScheduleIndexComputation() public {
+        bytes32 expectedVestingScheduleId = 0x1891b47bd496d985cc84f1e264ac3dea4e3f7af4fafeb854e6cd86a41b23e7f9;
+
+        assertEq(tokenVesting.computeVestingScheduleIdForAddressAndIndex(alice, 0), expectedVestingScheduleId);
+    }
+
+    function testTextInputParameterChecks() public {
+        uint256 baseTime = 1622551248;
+
+        vm.startPrank(deployer);
+        token.transfer(address(tokenVesting), 100 ether);
+
+        vm.expectRevert("TokenVesting: duration must be > 0");
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, 0, 1, false, 100 ether);
+
+        vm.expectRevert("TokenVesting: slicePeriodSeconds must be >= 1");
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, 1, 0, false, 100 ether);
+
+        vm.expectRevert("TokenVesting: amount must be > 0");
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, 1, 1, false, 0);
     }
 }
