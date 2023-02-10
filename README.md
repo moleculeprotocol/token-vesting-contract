@@ -1,7 +1,5 @@
-[![Actions Status](https://github.com/schmackofant/token-vesting/workflows/test/badge.svg)](https://github.com/schmackofant/token-vesting/actions)
-[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
+[![Actions Status](https://github.com/schmackofant/token-vesting/workflows/main/badge.svg)](https://github.com/schmackofant/token-vesting/actions)
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![npm version](https://badge.fury.io/js/token-vesting-contracts.svg)](https://badge.fury.io/js/token-vesting-contracts)
 
 # Token Vesting Contracts
 
