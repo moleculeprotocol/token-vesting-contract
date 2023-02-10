@@ -20,7 +20,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     string public name;
     /// @dev The ERC20 symbol of the virtual token
     string public symbol;
-    /// @dev The ERC20 number of decimals of the virtual token (should be the same as the underlying token)
+    /// @dev The ERC20 number of decimals of the virtual token (should be the same as the native token)
     uint8 public decimals;
 
     struct VestingSchedule {
