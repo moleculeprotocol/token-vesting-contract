@@ -1,5 +1,5 @@
 // contracts/TokenVesting.sol
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -12,9 +12,16 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 /**
  * @title TokenVesting
  */
-contract TokenVesting is Ownable, ReentrancyGuard {
+contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
+
+    /// @dev The ERC20 name of the virtual token
+    string public name;
+    /// @dev The ERC20 symbol of the virtual token
+    string public symbol;
+    /// @dev The ERC20 number of decimals of the virtual token (should be the same as the underlying token)
+    uint8 public decimals;
 
     struct VestingSchedule {
         bool initialized;
@@ -38,8 +45,8 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         bool revoked;
     }
 
-    // address of the ERC20 token
-    IERC20 private immutable _token;
+    // address of the ERC20 native token
+    IERC20 private immutable _nativeToken;
 
     bytes32[] private vestingSchedulesIds;
     mapping(bytes32 => VestingSchedule) private vestingSchedules;
@@ -66,18 +73,62 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         _;
     }
 
+    /// @dev This error is fired when trying to perform an action that is not
+    /// supported by the contract, like transfers and approvals. These actions
+    /// will never be supported.
+    error NotSupported();
+
     /**
      * @dev Creates a vesting contract.
-     * @param token_ address of the ERC20 token contract
+     * @param token_ address of the ERC20 native token contract
+     * @param _name name of the virtual token
+     * @param _symbol symbol of the virtual token
+     * @param _decimals number of decimals of the virtual token (should be the same as the native token)
      */
-    constructor(address token_) {
+    constructor(address token_, string memory _name, string memory _symbol, uint8 _decimals) {
         require(token_ != address(0x0));
-        _token = IERC20(token_);
+        _nativeToken = IERC20(token_);
+        name = _name;
+        symbol = _symbol;
+        decimals = _decimals;
     }
 
     receive() external payable { }
 
     fallback() external payable { }
+
+    /// @dev All types of transfers are permanently disabled.
+    function transferFrom(address, address, uint256) public pure returns (bool) {
+        revert NotSupported();
+    }
+
+    /// @dev All types of transfers are permanently disabled.
+    function transfer(address, uint256) public pure returns (bool) {
+        revert NotSupported();
+    }
+
+    /// @dev All types of approvals are permanently disabled to reduce code
+    /// size.
+    function approve(address, uint256) public pure returns (bool) {
+        revert NotSupported();
+    }
+
+    /// @dev Approvals cannot be set, so allowances are always zero.
+    function allowance(address, address) public pure returns (uint256) {
+        return 0;
+    }
+
+    /// @dev Returns the amount of virtual tokens in existence
+    function totalSupply() public view returns (uint256) {
+        return vestingSchedulesTotalAmount;
+    }
+
+    /// @dev Returns the sum of virtual tokens for a user
+    /// @param user The user for whom the balance is calculated
+    /// @return Balance of the user
+    function balanceOf(address user) public view returns (uint256) {
+        return computeVestedAmountForHolder(user);
+    }
 
     /**
      * @dev Returns the number of vesting schedules associated to a beneficiary.
@@ -113,10 +164,10 @@ contract TokenVesting is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Returns the address of the ERC20 token managed by the vesting contract.
+     * @dev Returns the address of the ERC20 native token managed by the vesting contract.
      */
-    function getToken() external view returns (address) {
-        return address(_token);
+    function getNativeToken() external view returns (address) {
+        return address(_nativeToken);
     }
 
     /**
@@ -188,7 +239,7 @@ contract TokenVesting is Ownable, ReentrancyGuard {
      */
     function withdraw(uint256 amount) public nonReentrant onlyOwner {
         require(this.getWithdrawableAmount() >= amount, "TokenVesting: not enough withdrawable funds");
-        _token.safeTransfer(owner(), amount);
+        _nativeToken.safeTransfer(owner(), amount);
     }
 
     /**
@@ -206,7 +257,7 @@ contract TokenVesting is Ownable, ReentrancyGuard {
         vestingSchedule.released = vestingSchedule.released.add(amount);
         address payable beneficiaryPayable = payable(vestingSchedule.beneficiary);
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.sub(amount);
-        _token.safeTransfer(beneficiaryPayable, amount);
+        _nativeToken.safeTransfer(beneficiaryPayable, amount);
     }
 
     /**
@@ -230,13 +281,13 @@ contract TokenVesting is Ownable, ReentrancyGuard {
      * @notice Computes the total vested amount of tokens for the given address/holder
      * @return the vested amount
      */
-    function computeVestedTotalAmountForHolder(address holder) public view returns (uint256) {
+    function computeVestedAmountForHolder(address holder) public view returns (uint256) {
         uint256 vestedTotalAmount = 0;
         uint256 vestingCount = holdersVestingCount[holder];
         for (uint256 i = 0; i < vestingCount; i++) {
             bytes32 vestingScheduleId = computeVestingScheduleIdForAddressAndIndex(holder, i);
             VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
-            vestedTotalAmount = vestedTotalAmount.add(_computeReleasableAmount(vestingSchedule));
+            vestedTotalAmount = vestedTotalAmount.add(vestingSchedule.amountTotal - vestingSchedule.released);
         }
         return vestedTotalAmount;
     }
@@ -250,11 +301,11 @@ contract TokenVesting is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Returns the amount of tokens that can be withdrawn by the owner.
+     * @dev Returns the amount of native tokens that can be withdrawn by the owner.
      * @return the amount of tokens
      */
     function getWithdrawableAmount() public view returns (uint256) {
-        return _token.balanceOf(address(this)).sub(vestingSchedulesTotalAmount);
+        return _nativeToken.balanceOf(address(this)).sub(vestingSchedulesTotalAmount);
     }
 
     /**

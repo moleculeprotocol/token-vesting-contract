@@ -1,5 +1,5 @@
 // contracts/TokenVesting.sol
-// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
 import "./TokenVesting.sol";
@@ -11,7 +11,7 @@ import "./TokenVesting.sol";
 contract MockTokenVesting is TokenVesting {
     uint256 mockTime = 0;
 
-    constructor(address token_) TokenVesting(token_) { }
+    constructor(address token_, string memory _name, string memory _symbol, uint8 _decimals) TokenVesting(token_, _name, _symbol, _decimals) { }
 
     function setCurrentTime(uint256 _time) external {
         mockTime = _time;
