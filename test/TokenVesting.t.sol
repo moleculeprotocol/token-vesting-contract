@@ -6,6 +6,7 @@ import { console } from "forge-std/console.sol";
 
 import { Token } from "../contracts/Token.sol";
 import { MockTokenVesting } from "../contracts/MockTokenVesting.sol";
+import { TokenVesting } from "../contracts/TokenVesting.sol";
 
 contract TokenVestingTest is Test {
     Token internal token;
@@ -196,6 +197,8 @@ contract TokenVestingTest is Test {
         token.transfer(address(tokenVesting), 1000 ether);
         tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
         tokenVesting.createVestingSchedule(alice, baseTime, 0, duration * 2, 1, true, 50 ether);
+        assertEq(tokenVesting.getVestingSchedulesCount(), 2);
+        assertEq(tokenVesting.getVestingSchedulesCountByBeneficiary(alice), 2);
         vm.stopPrank();
 
         // set time to half the vesting period
@@ -235,14 +238,14 @@ contract TokenVestingTest is Test {
         vm.stopPrank();
     }
 
-    function testVTokenTotalSupplyAndBalance() public {
+    function testVirtualTokenTotalSupplyAndBalance() public {
         uint256 baseTime = 1622551248;
         uint256 duration = 1000;
 
-        // vToken total supply should be 0 before any vesting schedules are created
+        // virtual token total supply should be 0 before any vesting schedules are created
         assertEq(tokenVesting.totalSupply(), 0);
 
-        // vToken balance of alice should be 0 before any vesting schedules are created
+        // virtual token balance of alice should be 0 before any vesting schedules are created
         assertEq(tokenVesting.balanceOf(address(alice)), 0);
 
         vm.startPrank(deployer);
@@ -252,10 +255,10 @@ contract TokenVestingTest is Test {
 
         bytes32 vestingScheduleId = tokenVesting.computeVestingScheduleIdForAddressAndIndex(alice, 0);
 
-        // vToken total supply should be 100 after vesting schedule is created
+        // virtual token total supply should be 100 after vesting schedule is created
         assertEq(tokenVesting.totalSupply(), 100 ether);
 
-        // vToken balance of alice should be 100 after vesting schedule is created
+        // virtual token balance of alice should be 100 after vesting schedule is created
         assertEq(tokenVesting.balanceOf(address(alice)), 100 ether);
 
         // set time to half the vesting period
@@ -267,10 +270,10 @@ contract TokenVestingTest is Test {
         assertEq(token.balanceOf(address(alice)), 50 ether);
         vm.stopPrank();
 
-        // vToken total supply should be 50 after alice has released 50 tokens
+        // virtual token total supply should be 50 after alice has released 50 tokens
         assertEq(tokenVesting.totalSupply(), 50 ether);
 
-        // vToken balance of alice should be 50 after alice has released 50 tokens
+        // virtual token balance of alice should be 50 after alice has released 50 tokens
         assertEq(tokenVesting.balanceOf(address(alice)), 50 ether);
 
         // set time to end of vesting period
@@ -284,5 +287,56 @@ contract TokenVestingTest is Test {
 
         assertEq(token.balanceOf(address(alice)), 100 ether);
         assertEq(tokenVesting.balanceOf(address(alice)), 0);
+    }
+
+    function testCannotReleaseWhenPaused() public {
+        uint256 baseTime = 1622551248;
+        uint256 duration = 1000;
+
+        vm.startPrank(deployer);
+        token.transfer(address(tokenVesting), 100 ether);
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
+
+        bytes32 vestingScheduleId = tokenVesting.computeVestingScheduleIdForAddressAndIndex(alice, 0);
+
+        // set time to half the vesting period
+        uint256 halfTime = baseTime + duration / 2;
+        tokenVesting.setCurrentTime(halfTime);
+
+        // pause the contract
+        tokenVesting.setReleasePaused(true);
+        vm.stopPrank();
+
+        vm.startPrank(alice);
+        vm.expectRevert("TokenVesting: release is paused");
+        tokenVesting.release(vestingScheduleId, 50 ether);
+        vm.stopPrank();
+    }
+
+    function testNonTransferability() public {
+        uint256 baseTime = 1622551248;
+        uint256 duration = 1000;
+
+        vm.startPrank(deployer);
+        token.transfer(address(tokenVesting), 100 ether);
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
+        vm.stopPrank();
+
+        // set time to half the vesting period
+        uint256 halfTime = baseTime + duration / 2;
+        tokenVesting.setCurrentTime(halfTime);
+
+        assertEq(tokenVesting.balanceOf(address(alice)), 100 ether);
+
+        vm.startPrank(alice);
+        vm.expectRevert(TokenVesting.NotSupported.selector);
+        tokenVesting.transfer(address(bob), 50 ether);
+
+        vm.expectRevert(TokenVesting.NotSupported.selector);
+        tokenVesting.transferFrom(address(alice), address(bob), 50 ether);
+
+        vm.expectRevert(TokenVesting.NotSupported.selector);
+        tokenVesting.approve(address(1), 50 ether);
+        vm.stopPrank();
     }
 }
