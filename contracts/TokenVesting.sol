@@ -169,6 +169,20 @@ contract TokenVesting is Ownable, ReentrancyGuard {
     }
 
     /**
+     * @notice Sets a new beneficiary for the vesting schedule for given identifier.
+     * @param vestingScheduleId the vesting schedule identifier
+     * @param newBeneficiary address of the new beneficiary
+     */
+    function changeBeneficiary(bytes32 vestingScheduleId, address newBeneficiary)
+        public
+        onlyOwner
+        onlyIfVestingScheduleNotRevoked(vestingScheduleId)
+    {
+        require(newBeneficiary != address(0x0), "TokenVesting: new beneficiary must not be the zero address");
+        vestingSchedules[vestingScheduleId].beneficiary = newBeneficiary;
+    }
+
+    /**
      * @notice Withdraw the specified amount if possible.
      * @param amount the amount to withdraw
      */
