@@ -19,8 +19,8 @@ contract TokenVestingTest is Test {
 
     function setUp() public {
         vm.startPrank(deployer);
-        token = new Token("Test Token", "TT", 1000000 ether);
-        tokenVesting = new MockTokenVesting(address(token), "Virtual Test Token", "vTT", 18);
+        token = new Token("Test Token", "TT", 18, 1000000 ether);
+        tokenVesting = new MockTokenVesting(address(token), "Virtual Test Token", "vTT");
         vm.stopPrank();
     }
 
@@ -351,8 +351,8 @@ contract TokenVestingTest is Test {
         uint256 baseTime = 1622551248;
 
         vm.startPrank(deployer);
-        Token fuzzToken = new Token("Fuzz Token", "TT", amount);
-        MockTokenVesting fuzzVesting = new MockTokenVesting(address(fuzzToken), "Fuzz Vesting", "FV", 18);
+        Token fuzzToken = new Token("Fuzz Token", "TT", 18, amount);
+        MockTokenVesting fuzzVesting = new MockTokenVesting(address(fuzzToken), "Fuzz Vesting", "FV");
         fuzzToken.transfer(address(fuzzVesting), amount);
         fuzzVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, amount);
         vm.stopPrank();
@@ -367,6 +367,14 @@ contract TokenVestingTest is Test {
 
         vm.startPrank(alice);
         fuzzVesting.release(vestingScheduleId, releasableAmount);
+        vm.stopPrank();
+    }
+
+    function testNativeTokenDecimals() public {
+        vm.startPrank(deployer);
+        Token customToken = new Token("Fuzz Token", "TT", 6, 100 ether);
+        vm.expectRevert("TokenVesting: only native tokens with 18 decimals are supported");
+        new MockTokenVesting(address(customToken), "Fuzz Vesting", "FV");
         vm.stopPrank();
     }
 }

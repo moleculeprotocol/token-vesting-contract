@@ -11,7 +11,7 @@ import "./TokenVesting.sol";
 contract MockTokenVesting is TokenVesting {
     uint256 mockTime = 0;
 
-    constructor(address token_, string memory _name, string memory _symbol, uint8 _decimals) TokenVesting(token_, _name, _symbol, _decimals) { }
+    constructor(address token_, string memory _name, string memory _symbol) TokenVesting(token_, _name, _symbol) { }
 
     function setCurrentTime(uint256 _time) external {
         mockTime = _time;

@@ -9,6 +9,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
+abstract contract IERC20Extended is IERC20 {
+    function decimals() public virtual returns (uint8);
+}
+
 /// @title TokenVesting - This contract enables the storage of
 /// tokens alongside a vesting schdule that release a subset
 /// of the total amount stored on a time schedule. This implementation
@@ -20,14 +24,14 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 /// @author Abdelhamid Bakhta - abdelhamid.bakhta@gmail.com
 contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     using SafeMath for uint256;
-    using SafeERC20 for IERC20;
+    using SafeERC20 for IERC20Extended;
 
     /// @dev The ERC20 name of the virtual token
     string public name;
     /// @dev The ERC20 symbol of the virtual token
     string public symbol;
-    /// @dev The ERC20 number of decimals of the virtual token (should be the same as the native token)
-    uint8 public immutable decimals;
+    /// @dev The ERC20 number of decimals of the virtual token (this contract only supports native tokens with 18 decimals)
+    uint8 public constant decimals = 18;
 
     struct VestingSchedule {
         bool initialized;
@@ -52,7 +56,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     }
 
     // address of the ERC20 native token
-    IERC20 private immutable _nativeToken;
+    IERC20Extended private immutable _nativeToken;
 
     bool private _releasePaused = false;
 
@@ -91,14 +95,13 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @param token_ address of the ERC20 native token contract
      * @param _name name of the virtual token
      * @param _symbol symbol of the virtual token
-     * @param _decimals number of decimals of the virtual token (should be the same as the native token)
      */
-    constructor(address token_, string memory _name, string memory _symbol, uint8 _decimals) {
+    constructor(address token_, string memory _name, string memory _symbol) {
         require(token_ != address(0x0));
-        _nativeToken = IERC20(token_);
+        _nativeToken = IERC20Extended(token_);
+        require(_nativeToken.decimals() == 18, "TokenVesting: only native tokens with 18 decimals are supported");
         name = _name;
         symbol = _symbol;
-        decimals = _decimals;
     }
 
     receive() external payable { }
