@@ -42,6 +42,12 @@ Afterwards run this command to install the dependencies:
 ```console
 $ forge install
 ```
+### General config
+
+- The deploy scripts are located in `script`
+- Copy `.env.example` to `.env`
+
+You can place required env vars in your `.env` file and run `source .env` to get them into your current terminal session or provide them when invoking the command.
 
 ### ⛏️ Compile
 
@@ -50,6 +56,13 @@ $ forge build
 ```
 
 This task will compile all smart contracts in the `contracts` directory.
+
+### Deploy for local development
+
+- Anvil is a local testnet node shipped with Foundry. You can use it for testing your contracts from frontends or for interacting over RPC.
+- Run `anvil -h 0.0.0.0` in a terminal window and keep it running
+
+To just deploy all contracts using the default mnemonic's first account, run `forge script script/Dev.s.sol:DevScript --fork-url $ANVIL_RPC_URL --broadcast -vvvv`
 
 ### 🌡️ Testing
 
