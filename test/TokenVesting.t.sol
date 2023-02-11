@@ -346,7 +346,7 @@ contract TokenVestingTest is Test {
         // Assuming realistic range
         vm.assume(amount > 1 ether && amount <= 1_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000 ether);
         // schedule duration between 1 day and 30 years
-        vm.assume(duration > 86400 && duration <= 946080000);
+        vm.assume(duration > 86400 && duration <= 30 * 365 * 24 * 60 * 60);
 
         uint256 baseTime = 1622551248;
 
