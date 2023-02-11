@@ -27,7 +27,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     /// @dev The ERC20 symbol of the virtual token
     string public symbol;
     /// @dev The ERC20 number of decimals of the virtual token (should be the same as the native token)
-    uint8 public decimals;
+    uint8 public immutable decimals;
 
     struct VestingSchedule {
         bool initialized;
@@ -41,8 +41,8 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
         uint256 duration;
         // duration of a slice period for the vesting in seconds
         uint256 slicePeriodSeconds;
-        // whether or not the vesting is revocable
-        bool revocable;
+        // whether or not the vesting is revokable
+        bool revokable;
         // total amount of tokens to be released at the end of the vesting
         uint256 amountTotal;
         // amount of tokens released
@@ -185,7 +185,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @param _cliff duration in seconds of the cliff in which tokens will begin to vest
      * @param _duration duration in seconds of the period in which the tokens will vest
      * @param _slicePeriodSeconds duration of a slice period for the vesting in seconds
-     * @param _revocable whether the vesting is revocable or not
+     * @param _revokable whether the vesting is revokable or not
      * @param _amount total amount of tokens to be released at the end of the vesting
      */
     function createVestingSchedule(
@@ -194,17 +194,17 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
         uint256 _cliff,
         uint256 _duration,
         uint256 _slicePeriodSeconds,
-        bool _revocable,
+        bool _revokable,
         uint256 _amount
     ) public onlyOwner {
-        require(this.getWithdrawableAmount() >= _amount, "TokenVesting: cannot create vesting schedule because not sufficient tokens");
+        require(getWithdrawableAmount() >= _amount, "TokenVesting: cannot create vesting schedule because of insufficient tokens in contract");
         require(_duration > 0, "TokenVesting: duration must be > 0");
         require(_amount > 0, "TokenVesting: amount must be > 0");
         require(_slicePeriodSeconds >= 1, "TokenVesting: slicePeriodSeconds must be >= 1");
-        bytes32 vestingScheduleId = this.computeNextVestingScheduleIdForHolder(_beneficiary);
+        bytes32 vestingScheduleId = computeNextVestingScheduleIdForHolder(_beneficiary);
         uint256 cliff = _start.add(_cliff);
         vestingSchedules[vestingScheduleId] =
-            VestingSchedule(true, _beneficiary, cliff, _start, _duration, _slicePeriodSeconds, _revocable, _amount, 0, false);
+            VestingSchedule(true, _beneficiary, cliff, _start, _duration, _slicePeriodSeconds, _revokable, _amount, 0, false);
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.add(_amount);
         vestingSchedulesIds.push(vestingScheduleId);
         uint256 currentVestingCount = holdersVestingCount[_beneficiary];
@@ -217,7 +217,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      */
     function revoke(bytes32 vestingScheduleId) public onlyOwner onlyIfVestingScheduleNotRevoked(vestingScheduleId) {
         VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
-        require(vestingSchedule.revocable == true, "TokenVesting: vesting is not revocable");
+        require(vestingSchedule.revokable == true, "TokenVesting: vesting is not revokable");
         uint256 vestedAmount = _computeReleasableAmount(vestingSchedule);
         if (vestedAmount > 0) {
             release(vestingScheduleId, vestedAmount);
@@ -229,10 +229,10 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
 
     /**
      * @notice Pauses or unpauses the release of tokens
-     * @param releasePaused_ true if the release of tokens should be paused, false otherwise
+     * @param paused true if the release of tokens should be paused, false otherwise
      */
-    function setReleasePaused(bool releasePaused_) public onlyOwner {
-        _releasePaused = releasePaused_;
+    function setReleasePaused(bool paused) public onlyOwner {
+        _releasePaused = paused;
     }
 
     /**
@@ -254,7 +254,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @param amount the amount to withdraw
      */
     function withdraw(uint256 amount) public nonReentrant onlyOwner {
-        require(this.getWithdrawableAmount() >= amount, "TokenVesting: not enough withdrawable funds");
+        require(getWithdrawableAmount() >= amount, "TokenVesting: not enough withdrawable funds");
         _nativeToken.safeTransfer(owner(), amount);
     }
 
