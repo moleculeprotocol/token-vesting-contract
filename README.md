@@ -72,4 +72,4 @@ $ forge test -vv
 
 ## 📄 License
 
-**Token Vesting Contracts** is released under the [Apache-2.0](LICENSE).
+**Token Vesting Contract** is released under the [Apache-2.0](LICENSE).
