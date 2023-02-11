@@ -25,7 +25,7 @@ The original contract by [@abdelhamidbakhta](https://github.com/abdelhamidbakhta
 
 ## Important notes
 - This contract is only compatible with native tokens that have 18 decimals. Deyploment will revert otherwise.
-- You should never use this contract with a native token that is rebasing down as this could lead to calculation errors. E.g. if the token balance of the `TokenVesting` smart contract goes lower due to rebasing, the beneficiary can only release fewer tokens than expected (contract token balance is smaller than the `amountTotal` of the schedule).
+- You should never use this contract with a native token that is rebasing down as this could lead to calculation errors. E.g. if the token balance of the `TokenVesting` smart contract goes lower due to rebasing, the beneficiary can only release fewer tokens than expected (contract token balance could be smaller than the `amountTotal` of the schedule).
 
 ### 📦 Installation
 
