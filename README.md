@@ -1,64 +1,56 @@
 [![Actions Status](https://github.com/schmackofant/token-vesting/workflows/main/badge.svg)](https://github.com/schmackofant/token-vesting/actions)
 [![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-# Token Vesting Contracts
+# Token Vesting Contract
 
 ## Overview
 
 On-Chain vesting scheme enabled by smart contracts.
 
-`TokenVesting` contract can release its token balance gradually like a typical vesting scheme, with a cliff and vesting period.
-Optionally revocable by the owner.
+The `TokenVesting` contract can release its token balance gradually like a typical vesting scheme, with a cliff and vesting period. The contract owner can create vesting schedules for different users, even multiple for the same person.
+
+Vesting schedules are optionally revokable by the owner. Additionally the smart contract functions as an ERC20 compatible non-transferable virtual token which can be used e.g. for governance.
+
+This work is based on the `TokenVesting` [contract](https://github.com/abdelhamidbakhta/token-vesting-contracts) by [@abdelhamidbakhta](https://github.com/abdelhamidbakhta) and was extended with the virtual token functionality and a few convenient improvements.
+
+### What is a virtual token?
+
+The amount of unvested tokens of an user are represented as a ERC20 balance (non-transferable, hence the term _virtual_ token) and can be used for governance (e.g. Snapshot). Inspired by the [vCOW](https://github.com/cowprotocol/token) token of CowSwap this allows DAOs and organizations to create vesting schedules for team, investors and contributors that vest linearly over time. While the tokens might be linearly vesting over a longer time period, the virtual token allows these people to participate in governance right away, which is a great way for DAOs to incentivize long term contributors. 
 
 ## 🎭🧑‍💻 Security audits
 
 - [Security audit](https://github.com/abdelhamidbakhta/token-vesting-contracts/blob/main/audits/hacken_audit_report.pdf) from [Hacken](https://hacken.io)
 
+The original contract by [@abdelhamidbakhta](https://github.com/abdelhamidbakhta) was audited in 2021. This version leaves the core logic around creating and managing vesting schedules and the computation untouched and merely expands the contract with the virtual token functionality and a few minor changes. 
+
 ### 📦 Installation
 
+To work with this repository you have to install Foundry (<https://getfoundry.sh>). Run the following command in your terminal, then follow the onscreen instructions (macOS and Linux):
+
+`curl -L https://foundry.paradigm.xyz | bash`
+
+The above command will install `foundryup`. Then install Foundry by running `foundryup` in your terminal.
+
+(Check out the Foundry book for a Windows installation guide: <https://book.getfoundry.sh>)
+
+Afterwards run this command to install the dependencies:
+
 ```console
-$ yarn
+$ forge install
 ```
 
 ### ⛏️ Compile
 
 ```console
-$ yarn compile
+$ forge build
 ```
 
 This task will compile all smart contracts in the `contracts` directory.
-ABI files will be automatically exported in `build/abi` directory.
-
-### 📚 Documentation
-
-Documentation is auto-generated after each build in `docs` directory.
-
-The generated output is a static website containing smart contract documentation.
 
 ### 🌡️ Testing
 
 ```console
-$ yarn test
-```
-
-### 📊 Code coverage
-
-```console
-$ yarn coverage
-```
-
-The report will be printed in the console and a static website containing full report will be generated in `coverage` directory.
-
-### ✨ Code style
-
-```console
-$ yarn prettier
-```
-
-### 🐱‍💻 Verify & Publish contract source code
-
-```console
-$ npx hardhat  verify --network mainnet $CONTRACT_ADDRESS $CONSTRUCTOR_ARGUMENTS
+$ forge test -vv
 ```
 
 ## 📄 License
