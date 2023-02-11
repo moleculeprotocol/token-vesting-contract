@@ -158,6 +158,8 @@ contract TokenVestingTest is Test {
         uint256 halfTime = 1622551248 + 1000 / 2;
         tokenVesting.setCurrentTime(halfTime);
 
+        assertEq(token.balanceOf(address(alice)), 0 ether);
+
         tokenVesting.revoke(vestingScheduleId);
         assertEq(token.balanceOf(address(alice)), 50 ether);
 
@@ -337,6 +339,34 @@ contract TokenVestingTest is Test {
 
         vm.expectRevert(TokenVesting.NotSupported.selector);
         tokenVesting.approve(address(1), 50 ether);
+        vm.stopPrank();
+    }
+
+    function testFuzzCreateAndRelease(uint256 amount, uint256 duration) public {
+        // Assuming realistic range
+        vm.assume(amount > 1 ether && amount <= 1_000_000_000_000_000_000_000_000_000_000_000_000_000 ether);
+        // schedule duration between 1 day and 30 years
+        vm.assume(duration > 86400 && duration <= 946080000);
+
+        uint256 baseTime = 1622551248;
+
+        vm.startPrank(deployer);
+        Token fuzzToken = new Token("Fuzz Token", "TT", amount);
+        MockTokenVesting fuzzVesting = new MockTokenVesting(address(fuzzToken), "Fuzz Vesting", "FV", 18);
+        fuzzToken.transfer(address(fuzzVesting), amount);
+        fuzzVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, amount);
+        vm.stopPrank();
+
+        bytes32 vestingScheduleId = fuzzVesting.computeVestingScheduleIdForAddressAndIndex(alice, 0);
+
+        // set time to half the vesting period
+        uint256 halfTime = baseTime + duration / 2;
+        fuzzVesting.setCurrentTime(halfTime);
+
+        uint256 releasableAmount = fuzzVesting.computeReleasableAmount(vestingScheduleId);
+
+        vm.startPrank(alice);
+        fuzzVesting.release(vestingScheduleId, releasableAmount);
         vm.stopPrank();
     }
 }
