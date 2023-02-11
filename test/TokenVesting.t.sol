@@ -344,7 +344,7 @@ contract TokenVestingTest is Test {
 
     function testFuzzCreateAndRelease(uint256 amount, uint256 duration) public {
         // Assuming realistic range
-        vm.assume(amount > 1 ether && amount <= 1_000_000_000_000_000_000_000_000_000_000_000_000_000 ether);
+        vm.assume(amount > 1 ether && amount <= 1_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000_000 ether);
         // schedule duration between 1 day and 30 years
         vm.assume(duration > 86400 && duration <= 946080000);
 
