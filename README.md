@@ -15,13 +15,17 @@ This work is based on the `TokenVesting` [contract](https://github.com/abdelhami
 
 ### What is a virtual token?
 
-The amount of unvested tokens of an user are represented as a ERC20 balance (non-transferable, hence the term _virtual_ token) and can be used for governance (e.g. Snapshot). Inspired by the [vCOW](https://github.com/cowprotocol/token) token of CowSwap this allows DAOs and organizations to create vesting schedules for team, investors and contributors that vest linearly over time. While the tokens might be linearly vesting over a longer time period, the virtual token allows these people to participate in governance right away, which is a great way for DAOs to incentivize long term contributors. 
+The amount of unvested tokens of an user are represented as a ERC20 balance (non-transferable, hence the term _virtual_ token) and can be used for governance (e.g. Snapshot). Inspired by the [vCOW](https://github.com/cowprotocol/token) token of CowSwap this allows DAOs and organizations to create vesting schedules for team, investors and contributors that vest linearly over time. While the tokens might be linearly vesting over a longer time period, the virtual token allows these people to participate in governance right away, which is a great way for DAOs to incentivize long term contributors.
 
 ## 🎭🧑‍💻 Security audits
 
 - [Security audit](https://github.com/abdelhamidbakhta/token-vesting-contracts/blob/main/audits/hacken_audit_report.pdf) from [Hacken](https://hacken.io)
 
-The original contract by [@abdelhamidbakhta](https://github.com/abdelhamidbakhta) was audited in 2021. This version leaves the core logic around creating and managing vesting schedules and the computation untouched and merely expands the contract with the virtual token functionality and a few minor changes. 
+The original contract by [@abdelhamidbakhta](https://github.com/abdelhamidbakhta) was audited in 2021. This version leaves the core logic around creating and managing vesting schedules and the computation untouched and merely expands the contract with the virtual token functionality and a few minor changes.
+
+## Important notes
+- This contract is only compatible with native tokens that have 18 decimals. Deyploment will revert otherwise.
+- You should never use this contract with a native token that is rebasing down as this could lead to calculation errors. E.g. if the token balance of the `TokenVesting` smart contract goes lower due to rebasing, the beneficiary can only release fewer tokens than expected (contract token balance is smaller than the `amountTotal` of the schedule).
 
 ### 📦 Installation
 
