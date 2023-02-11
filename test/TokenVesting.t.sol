@@ -372,9 +372,9 @@ contract TokenVestingTest is Test {
 
     function testNativeTokenDecimals() public {
         vm.startPrank(deployer);
-        Token customToken = new Token("Fuzz Token", "TT", 6, 100 ether);
+        Token customToken = new Token("6 Decimals Token", "6DT", 6, 100 ether);
         vm.expectRevert("TokenVesting: only native tokens with 18 decimals are supported");
-        new MockTokenVesting(address(customToken), "Fuzz Vesting", "FV");
+        new MockTokenVesting(address(customToken), "Vesting", "v6DT");
         vm.stopPrank();
     }
 }
