@@ -40,7 +40,7 @@ The above command will install `foundryup`. Then install Foundry by running `fou
 Afterwards run this command to install the dependencies:
 
 ```console
-$ forge install
+forge install
 ```
 ### General config
 
@@ -52,7 +52,7 @@ You can place required env vars in your `.env` file and run `source .env` to get
 ### ⛏️ Compile
 
 ```console
-$ forge build
+forge build
 ```
 
 This task will compile all smart contracts in the `contracts` directory.
@@ -60,7 +60,7 @@ This task will compile all smart contracts in the `contracts` directory.
 ### 🌡️ Testing
 
 ```console
-$ forge test -vv
+forge test -vv
 ```
 
 ### 🚀 Deployment
@@ -70,13 +70,23 @@ $ forge test -vv
 - Anvil is a local testnet node shipped with Foundry. You can use it for testing your contracts from frontends or for interacting over RPC.
 - Run `anvil -h 0.0.0.0` in a terminal window and keep it running
 
-To just deploy all contracts using the default mnemonic's first account, run `forge script script/Dev.s.sol:DevScript --fork-url $ANVIL_RPC_URL --broadcast -vvvv` (remember to run `source .env` beforehand).
+To just deploy all contracts using the default mnemonic's first account, run (remember to run `source .env` beforehand): 
+
+```console
+forge script script/Dev.s.sol:DevScript --fork-url $ANVIL_RPC_URL --broadcast -vvvv
+```
 
 #### Testnet
 
 - Make sure you have set your environment variables in `.env`
 - Take a look at `script/deploy.s.sol` and set the address of the native token that you want to use for your token vesting contract (`nativeToken`)
-- Run `forge script script/Deploy.s.sol:DeployScript --rpc-url goerli --broadcast --verify -vvvv` on the command line to deploy to Goerli testnet. The Etherscan verification will only work if you have set your API key in `.env`. 
+- Run the command below to deploy to Goerli testnet:
+
+```console
+forge script script/Deploy.s.sol:DeployScript --rpc-url goerli --broadcast --verify -vvvv
+```
+
+- The Etherscan verification will only work if you have set your API key in `.env`. 
 
 ## 📄 License
 
