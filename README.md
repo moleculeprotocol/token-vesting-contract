@@ -63,7 +63,7 @@ This task will compile all smart contracts in the `contracts` directory.
 $ forge test -vv
 ```
 
-### Deploy
+### 🚀 Deployment
 
 #### Local development
 
