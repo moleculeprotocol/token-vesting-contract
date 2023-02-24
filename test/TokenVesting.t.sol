@@ -323,7 +323,7 @@ contract TokenVestingTest is Test {
         vm.stopPrank();
 
         vm.startPrank(alice);
-        vm.expectRevert("TokenVesting: release is paused");
+        vm.expectRevert("TokenVesting: token release is paused");
         tokenVesting.release(vestingScheduleId, 50 ether);
         vm.stopPrank();
     }

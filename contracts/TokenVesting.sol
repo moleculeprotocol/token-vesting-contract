@@ -289,7 +289,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @param amount the amount to release
      */
     function release(bytes32 vestingScheduleId, uint256 amount) public nonReentrant onlyIfVestingScheduleNotRevoked(vestingScheduleId) {
-        require(_releasePaused == false, "TokenVesting: release is paused");
+        require(_releasePaused == false, "TokenVesting: token release is paused");
         VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
         bool isBeneficiary = msg.sender == vestingSchedule.beneficiary;
         bool isOwner = msg.sender == owner();
