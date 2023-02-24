@@ -10,7 +10,7 @@ import { MerkleProofLib } from "solady/utils/MerkleProofLib.sol";
 /// easier to initially distribute tokens to a large number of people.
 contract TokenVestingMerkle is TokenVesting {
     /// @dev The Merkle Root
-    bytes32 private merkleRoot;
+    bytes32 private immutable merkleRoot;
 
     /// @dev Mapping for already used merkle leaves
     mapping(bytes32 => bool) private claimed;
