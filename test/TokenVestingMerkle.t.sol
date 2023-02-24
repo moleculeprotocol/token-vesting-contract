@@ -41,6 +41,7 @@ contract TokenVestingMerkleTest is Test {
         vm.stopPrank();
 
         assertEq(tokenVesting.balanceOf(alice), 20000 ether);
+        assertEq(tokenVesting.scheduleClaimed(alice, 1622551248, 0, 1000, 1, true, 20000 ether), true);
     }
 
     function testOnlyBeneficiaryCanClaim() public {
@@ -77,5 +78,20 @@ contract TokenVestingMerkleTest is Test {
         vm.stopPrank();
 
         assertEq(tokenVesting.balanceOf(alice), 0);
+    }
+
+    function testCannotClaimWithoutTokens() public {
+        vm.startPrank(deployer);
+        tokenVesting.withdraw(1000000 ether);
+        vm.stopPrank();
+
+        assertEq(token.balanceOf(address(tokenVesting)), 0);
+
+        vm.startPrank(alice);
+        vm.expectRevert("TokenVesting: cannot create vesting schedule because of insufficient tokens in contract");
+        tokenVesting.claimSchedule(aliceProof, alice, 1622551248, 0, 1000, 1, true, 20000 ether);
+        vm.stopPrank();
+
+        assertEq(tokenVesting.scheduleClaimed(alice, 1622551248, 0, 1000, 1, true, 20000 ether), false);
     }
 }
