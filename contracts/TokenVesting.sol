@@ -182,7 +182,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Creates a new vesting schedule for a beneficiary.
+     * @notice Public function for creating a vesting schedule (only callable by contract owner)
      * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
      * @param _start start time of the vesting period
      * @param _cliff duration in seconds of the cliff in which tokens will begin to vest
@@ -200,6 +200,28 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
         bool _revokable,
         uint256 _amount
     ) public onlyOwner {
+        _createVestingSchedule(_beneficiary, _start, _cliff, _duration, _slicePeriodSeconds, _revokable, _amount);
+    }
+
+    /**
+     * @notice Creates a new vesting schedule for a beneficiary.
+     * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
+     * @param _start start time of the vesting period
+     * @param _cliff duration in seconds of the cliff in which tokens will begin to vest
+     * @param _duration duration in seconds of the period in which the tokens will vest
+     * @param _slicePeriodSeconds duration of a slice period for the vesting in seconds
+     * @param _revokable whether the vesting is revokable or not
+     * @param _amount total amount of tokens to be released at the end of the vesting
+     */
+    function _createVestingSchedule(
+        address _beneficiary,
+        uint256 _start,
+        uint256 _cliff,
+        uint256 _duration,
+        uint256 _slicePeriodSeconds,
+        bool _revokable,
+        uint256 _amount
+    ) internal {
         require(getWithdrawableAmount() >= _amount, "TokenVesting: cannot create vesting schedule because of insufficient tokens in contract");
         require(_duration > 0, "TokenVesting: duration must be > 0");
         require(_amount > 0, "TokenVesting: amount must be > 0");

@@ -142,6 +142,19 @@ contract TokenVestingTest is Test {
         vm.stopPrank();
     }
 
+    function testNonOwnerCannotCreateSchedule() public {
+        uint256 baseTime = 1622551248;
+        uint256 duration = 1000;
+
+        vm.startPrank(deployer);
+        token.transfer(address(tokenVesting), 100 ether);
+        vm.stopPrank();
+        vm.startPrank(alice);
+        vm.expectRevert("Ownable: caller is not the owner");
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
+        vm.stopPrank();
+    }
+
     function testRevokeScheduleReleasesVestedTokens() public {
         uint256 baseTime = 1622551248;
         uint256 duration = 1000;
