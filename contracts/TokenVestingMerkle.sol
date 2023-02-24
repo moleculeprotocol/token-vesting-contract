@@ -3,7 +3,7 @@
 pragma solidity 0.8.18;
 
 import { TokenVesting } from "./TokenVesting.sol";
-import { MerkleProof } from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import { MerkleProofLib } from "solady/utils/MerkleProofLib.sol";
 
 /// @title TokenVestingMerkle - This contract has all the functionality of TokenVesting,
 /// but it adds the ability to create a merkle tree of vesting schedules. This makes it
@@ -31,7 +31,7 @@ contract TokenVestingMerkle is TokenVesting {
      * @param _amount total amount of tokens to be released at the end of the vesting
      */
     function claimSchedule(
-        bytes32[] memory _proof,
+        bytes32[] calldata _proof,
         address _beneficiary,
         uint256 _start,
         uint256 _cliff,
@@ -44,7 +44,7 @@ contract TokenVestingMerkle is TokenVesting {
             keccak256(bytes.concat(keccak256(abi.encode(_beneficiary, _start, _cliff, _duration, _slicePeriodSeconds, _revokable, _amount))));
 
         require(_msgSender() == _beneficiary, "TokenVesting: Only beneficiary can claim");
-        require(MerkleProof.verify(_proof, merkleRoot, leaf), "TokenVesting: Invalid proof");
+        require(MerkleProofLib.verify(_proof, merkleRoot, leaf), "TokenVesting: Invalid proof");
         require(!claimed[leaf], "TokenVesting: Already claimed");
 
         _createVestingSchedule(_beneficiary, _start, _cliff, _duration, _slicePeriodSeconds, _revokable, _amount);
