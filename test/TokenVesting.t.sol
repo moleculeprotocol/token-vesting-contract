@@ -348,11 +348,11 @@ contract TokenVestingTest is Test {
         tokenVesting.setCurrentTime(halfTime);
 
         // pause the contract
-        tokenVesting.setReleasePaused(true);
+        tokenVesting.setPaused(true);
         vm.stopPrank();
 
         vm.startPrank(alice);
-        vm.expectRevert("TokenVesting: token release is paused");
+        vm.expectRevert("Pausable: paused");
         tokenVesting.release(vestingScheduleId, 50 ether);
         vm.stopPrank();
     }

@@ -7,6 +7,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
 
 abstract contract IERC20Extended is IERC20 {
     function decimals() public virtual returns (uint8);
@@ -21,7 +22,7 @@ abstract contract IERC20Extended is IERC20 {
 /// Original repository can be found at:
 /// https://github.com/abdelhamidbakhta/token-vesting-contracts
 /// @author Abdelhamid Bakhta - abdelhamid.bakhta@gmail.com
-contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
+contract TokenVesting is IERC20, Ownable, ReentrancyGuard, Pausable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20Extended;
 
@@ -60,8 +61,6 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
 
     // address of the ERC20 native token
     IERC20Extended private immutable _nativeToken;
-
-    bool private _releasePaused = false;
 
     bytes32[] private vestingSchedulesIds;
     mapping(bytes32 => VestingSchedule) private vestingSchedules;
@@ -258,11 +257,15 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Pauses or unpauses the release of tokens
-     * @param paused true if the release of tokens should be paused, false otherwise
+     * @notice Pauses or unpauses the release of tokens and claiming of schedules
+     * @param paused true if the release of tokens and claiming of schedules should be paused, false otherwise
      */
-    function setReleasePaused(bool paused) external onlyOwner {
-        _releasePaused = paused;
+    function setPaused(bool paused) external onlyOwner {
+        if (paused) {
+            _pause();
+        } else {
+            _unpause();
+        }
     }
 
     /**
@@ -302,8 +305,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @param vestingScheduleId the vesting schedule identifier
      * @param amount the amount to release
      */
-    function _release(bytes32 vestingScheduleId, uint256 amount) internal {
-        require(_releasePaused == false, "TokenVesting: token release is paused");
+    function _release(bytes32 vestingScheduleId, uint256 amount) internal whenNotPaused {
         VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
         bool isBeneficiary = msg.sender == vestingSchedule.beneficiary;
         bool isOwner = msg.sender == owner();
@@ -323,7 +325,12 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @param vestingScheduleId the vesting schedule identifier
      * @param amount the amount to release
      */
-    function release(bytes32 vestingScheduleId, uint256 amount) external nonReentrant onlyIfVestingScheduleNotRevoked(vestingScheduleId) {
+    function release(bytes32 vestingScheduleId, uint256 amount)
+        external
+        whenNotPaused
+        nonReentrant
+        onlyIfVestingScheduleNotRevoked(vestingScheduleId)
+    {
         _release(vestingScheduleId, amount);
     }
 
@@ -331,7 +338,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @notice Release all available tokens for holder address
      * @param holder address of the holder & beneficiary
      */
-    function releaseAvailableTokensForHolder(address holder) external nonReentrant {
+    function releaseAvailableTokensForHolder(address holder) external whenNotPaused nonReentrant {
         uint256 vestingScheduleCount = holdersVestingScheduleCount[holder];
         for (uint256 i = 0; i < vestingScheduleCount; i++) {
             bytes32 vestingScheduleId = computeVestingScheduleIdForAddressAndIndex(holder, i);
