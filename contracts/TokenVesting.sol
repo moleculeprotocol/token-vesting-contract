@@ -301,8 +301,8 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
         vestingSchedule.released = vestingSchedule.released.add(amount);
         address payable beneficiaryPayable = payable(vestingSchedule.beneficiary);
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.sub(amount);
-        _nativeToken.safeTransfer(beneficiaryPayable, amount);
         emit Released(vestingScheduleId, vestingSchedule.beneficiary, amount);
+        _nativeToken.safeTransfer(beneficiaryPayable, amount);
     }
 
     /**
