@@ -223,6 +223,32 @@ contract TokenVestingTest is Test {
         assertEq(tokenVesting.computeVestedAmountForHolder(alice), 150 ether);
     }
 
+    function testClaimAvailableTokens() public {
+        uint256 baseTime = 1622551248;
+        uint256 duration = 1000;
+
+        vm.startPrank(deployer);
+        token.transfer(address(tokenVesting), 1000 ether);
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, duration * 2, 1, true, 50 ether);
+        assertEq(tokenVesting.getVestingSchedulesCount(), 2);
+        assertEq(tokenVesting.getVestingSchedulesCountByBeneficiary(alice), 2);
+        vm.stopPrank();
+
+        // set time to half the vesting period
+        uint256 halfTime = baseTime + duration / 2;
+        tokenVesting.setCurrentTime(halfTime);
+
+        assertEq(tokenVesting.computeVestedAmountForHolder(alice), 150 ether);
+
+        vm.startPrank(alice);
+        tokenVesting.releaseAvailableTokensForHolder(alice);
+        vm.stopPrank();
+
+        assertEq(tokenVesting.computeVestedAmountForHolder(alice), 87.5 ether);
+        assertEq(token.balanceOf(address(alice)), 62.5 ether);
+    }
+
     function testBeneficiaryUpdate() public {
         uint256 baseTime = 1622551248;
         uint256 duration = 1000;

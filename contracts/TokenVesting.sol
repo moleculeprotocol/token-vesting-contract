@@ -6,7 +6,6 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 abstract contract IERC20Extended is IERC20 {
@@ -65,8 +64,8 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     uint256 private vestingSchedulesTotalAmount;
     mapping(address => uint256) private holdersVestingCount;
 
-    event Released(uint256 amount);
-    event Revoked();
+    event Released(bytes32 vestingSchedule, address beneficiary, uint256 amount);
+    event Revoked(bytes32 vestingSchedule);
 
     /**
      * @dev Reverts if no vesting schedule matches the passed identifier.
@@ -252,6 +251,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
         uint256 unreleased = vestingSchedule.amountTotal.sub(vestingSchedule.released);
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.sub(unreleased);
         vestingSchedule.revoked = true;
+        emit Revoked(vestingScheduleId);
     }
 
     /**
@@ -286,11 +286,11 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Release vested amount of tokens.
+     * @notice Internal function for releasing vested amount of tokens.
      * @param vestingScheduleId the vesting schedule identifier
      * @param amount the amount to release
      */
-    function release(bytes32 vestingScheduleId, uint256 amount) public nonReentrant onlyIfVestingScheduleNotRevoked(vestingScheduleId) {
+    function _release(bytes32 vestingScheduleId, uint256 amount) internal {
         require(_releasePaused == false, "TokenVesting: token release is paused");
         VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
         bool isBeneficiary = msg.sender == vestingSchedule.beneficiary;
@@ -302,6 +302,31 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
         address payable beneficiaryPayable = payable(vestingSchedule.beneficiary);
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.sub(amount);
         _nativeToken.safeTransfer(beneficiaryPayable, amount);
+        emit Released(vestingScheduleId, vestingSchedule.beneficiary, amount);
+    }
+
+    /**
+     * @notice Release vested amount of tokens.
+     * @param vestingScheduleId the vesting schedule identifier
+     * @param amount the amount to release
+     */
+    function release(bytes32 vestingScheduleId, uint256 amount) public nonReentrant onlyIfVestingScheduleNotRevoked(vestingScheduleId) {
+        _release(vestingScheduleId, amount);
+    }
+
+    /**
+     * @notice Release all available tokens for holder address
+     * @param holder address of the holder & beneficiary
+     */
+    function releaseAvailableTokensForHolder(address holder) public nonReentrant {
+        uint256 vestingScheduleCount = holdersVestingCount[holder];
+        for (uint256 i = 0; i < vestingScheduleCount; i++) {
+            bytes32 vestingScheduleId = computeVestingScheduleIdForAddressAndIndex(holder, i);
+            uint256 releasable = computeReleasableAmount(vestingScheduleId);
+            if (releasable > 0) {
+                _release(vestingScheduleId, releasable);
+            }
+        }
     }
 
     /**
@@ -327,8 +352,8 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      */
     function computeVestedAmountForHolder(address holder) public view returns (uint256) {
         uint256 vestedTotalAmount = 0;
-        uint256 vestingCount = holdersVestingCount[holder];
-        for (uint256 i = 0; i < vestingCount; i++) {
+        uint256 vestingScheduleCount = holdersVestingCount[holder];
+        for (uint256 i = 0; i < vestingScheduleCount; i++) {
             bytes32 vestingScheduleId = computeVestingScheduleIdForAddressAndIndex(holder, i);
             VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
             vestedTotalAmount = vestedTotalAmount.add(vestingSchedule.amountTotal - vestingSchedule.released);
