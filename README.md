@@ -13,11 +13,6 @@ Vesting schedules are optionally revokable by the owner. Additionally the smart 
 
 This work is based on the `TokenVesting` [contract](https://github.com/abdelhamidbakhta/token-vesting-contracts) by [@abdelhamidbakhta](https://github.com/abdelhamidbakhta) and was extended with the virtual token functionality and a few convenience features.
 
-### Some of the added features
-- `changeBeneficiary` function to migrate vesting schedules to a new address
-- `releaseAvailableTokensForHolder` function to release all available tokens for a beneficiary
-- `setReleasePaused` function to globally pause token releases
-
 ### What is a virtual token?
 
 A virtual token refers to the representation of an individual's unvested tokens as a non-transferable ERC20 balance, which can be utilized for governance purposes (such as Snapshot). Drawing inspiration from CowSwap's [vCOW](https://github.com/cowprotocol/token) token, virtual tokens enable decentralized autonomous organizations (DAOs) and other entities to establish vesting schedules for team members, investors, and contributors, which linearly vest over a predetermined timeframe.
@@ -45,6 +40,11 @@ Please make sure you validate the different vesting schedule inputs (duration, a
 - [Security audit](https://github.com/abdelhamidbakhta/token-vesting-contracts/blob/main/audits/hacken_audit_report.pdf) from [Hacken](https://hacken.io)
 
 The original contract by [@abdelhamidbakhta](https://github.com/abdelhamidbakhta) was audited in 2021. This version leaves the core logic around creating and managing vesting schedules and the computation untouched (see [diff](https://github.com/schmackofant/token-vesting/compare/1407a87...c2d274d#diff-c1f2ee83cfe329d4820d59fb7e1762e3777d08287ef8766d891323ef98d5b65c)) and merely expands the contract with the virtual token functionality and a few minor changes.
+
+### Main changes
+- `changeBeneficiary` function to migrate vesting schedules to a new address
+- `releaseAvailableTokensForHolder` function to release all available tokens for a beneficiary
+- `setReleasePaused` function to globally pause token releases
 
 ## ⚠️ Important notes and caveats
 - This contract is only compatible with native tokens that have 18 decimals. Deyploment will revert otherwise.
