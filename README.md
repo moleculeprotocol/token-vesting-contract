@@ -48,7 +48,7 @@ The original contract by [@abdelhamidbakhta](https://github.com/abdelhamidbakhta
 
 ## ⚠️ Important notes and caveats
 - This contract is only compatible with native tokens that have 18 decimals. Deyploment will revert otherwise.
-- You should never use this contract with a native token that is rebasing down as this could lead to calculation errors. E.g. if the token balance of the `TokenVesting` smart contract goes lower due to rebasing, the beneficiary can only release fewer tokens than expected (contract token balance could be smaller than the `amountTotal` of the schedule).
+- You should never use this contract with a native token that is rebasing down as this could lead to calculation errors. For example, if the `TokenVesting` smart contract's token balance decreases due to rebasing, the beneficiary might be able to release fewer tokens than anticipated. This occurs when the contract's token balance becomes smaller than the total amount specified in the vesting schedule.
 - The contract is tested with and allows a schedule duration `<= 50 years` and a token amount `<= 2^200` (approx. 1.6 Tredecillion tokens). If your requirements are more extreme than that, you should probably not use this contract and instead implement a custom solution.
 
 ## 📦 Installation
