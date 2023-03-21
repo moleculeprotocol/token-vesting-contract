@@ -352,8 +352,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @return the vested amount
      */
     function computeReleasableAmount(bytes32 vestingScheduleId) public view onlyIfVestingScheduleNotRevoked(vestingScheduleId) returns (uint256) {
-        VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
-        return _computeReleasableAmount(vestingSchedule);
+        return _computeReleasableAmount(vestingSchedules[vestingScheduleId]);
     }
 
     /**
