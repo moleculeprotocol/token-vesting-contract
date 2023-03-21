@@ -98,6 +98,8 @@ forge script script/Deploy.s.sol:DeployScript --rpc-url goerli --broadcast --ver
 
 - The Etherscan verification will only work if you have set your API key in `.env`. 
 
+You can of course also deploy to Sepolia testnet as well, e.g. by using `--rpc-url sepolia`. Just remember to set the ENV variables in `.env` accordingly. 
+
 ## 📄 License
 
 **Token Vesting Contract** is released under the [Apache-2.0](LICENSE).
