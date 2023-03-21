@@ -222,6 +222,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
         require(_duration > 0, "TokenVesting: duration must be > 0");
         require(_amount > 0, "TokenVesting: amount must be > 0");
         require(_slicePeriodSeconds >= 1, "TokenVesting: slicePeriodSeconds must be >= 1");
+        require(_duration >= _cliff, "TokenVesting: duration must be >= cliff");
         require(_amount <= 2 ** 200, "TokenVesting: amount must be <= 2 ** 200");
         require(_duration <= 50 * 365 * 24 * 60 * 60, "TokenVesting: duration must be <= 50 years");
         bytes32 vestingScheduleId = computeNextVestingScheduleIdForHolder(_beneficiary);
