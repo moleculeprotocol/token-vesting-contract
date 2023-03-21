@@ -39,7 +39,7 @@ contract TokenVestingMerkle is TokenVesting {
         uint256 _slicePeriodSeconds,
         bool _revokable,
         uint256 _amount
-    ) public {
+    ) public nonReentrant {
         bytes32 leaf =
             keccak256(bytes.concat(keccak256(abi.encode(_beneficiary, _start, _cliff, _duration, _slicePeriodSeconds, _revokable, _amount))));
 
