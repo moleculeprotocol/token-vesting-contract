@@ -13,7 +13,7 @@ contract DevScript is Script {
         (address deployer,) = deriveRememberKey(mnemonic, 0);
         vm.startBroadcast(deployer);
 
-        Token token = new Token("Test Token", "TT", 18, 100000000 ether);
+        Token token = new Token("Test Token", "TT", 18, 100_000_000 ether);
         TokenVesting tokenVesting = new TokenVesting(address(token), "Virtual Test Token", "vTT");
 
         console.log("TokenVesting is at: %s", address(tokenVesting));
