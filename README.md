@@ -43,7 +43,7 @@ The original contract by [@abdelhamidbakhta](https://github.com/abdelhamidbakhta
 
 ### Main changes
 - `changeBeneficiary` function to migrate vesting schedules to a new address
-- `releaseAvailableTokensForHolder` function to release all available tokens for a beneficiary
+- `releaseAvailableTokensForHolder` function to release all available tokens for a beneficiary (especially relevant if the beneficiary has multiple vesting schedules)
 - `setReleasePaused` function to globally pause token releases
 
 ## ⚠️ Important notes and caveats
