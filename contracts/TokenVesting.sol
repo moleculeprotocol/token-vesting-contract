@@ -76,7 +76,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @dev Reverts if the vesting schedule does not exist or has been revoked.
      */
     modifier onlyIfVestingScheduleNotRevoked(bytes32 vestingScheduleId) {
-        require(vestingSchedules[vestingScheduleId].initialized == true);
+        require(vestingSchedules[vestingScheduleId].initialized);
         require(vestingSchedules[vestingScheduleId].revoked == false);
         _;
     }
@@ -241,7 +241,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      */
     function revoke(bytes32 vestingScheduleId) external onlyOwner onlyIfVestingScheduleNotRevoked(vestingScheduleId) {
         VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
-        require(vestingSchedule.revokable == true, "TokenVesting: vesting is not revokable");
+        require(vestingSchedule.revokable, "TokenVesting: vesting is not revokable");
         uint256 vestedAmount = _computeReleasableAmount(vestingSchedule);
         if (vestedAmount > 0) {
             _release(vestingScheduleId, vestedAmount);
@@ -398,7 +398,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      */
     function _computeReleasableAmount(VestingSchedule memory vestingSchedule) internal view returns (uint256) {
         uint256 currentTime = getCurrentTime();
-        if ((currentTime < vestingSchedule.cliff) || vestingSchedule.revoked == true) {
+        if ((currentTime < vestingSchedule.cliff) || vestingSchedule.revoked) {
             return 0;
         } else if (currentTime >= vestingSchedule.start.add(vestingSchedule.duration)) {
             return vestingSchedule.amountTotal.sub(vestingSchedule.released);
