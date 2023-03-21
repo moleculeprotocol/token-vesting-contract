@@ -339,6 +339,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard, Pausable {
      * @param holder address of the holder & beneficiary
      */
     function releaseAvailableTokensForHolder(address holder) external whenNotPaused nonReentrant {
+        require(msg.sender == holder || msg.sender == owner(), "TokenVesting: only beneficiary and owner can release vested tokens");
         uint256 vestingScheduleCount = holdersVestingScheduleCount[holder];
         for (uint256 i = 0; i < vestingScheduleCount; i++) {
             bytes32 vestingScheduleId = computeVestingScheduleIdForAddressAndIndex(holder, i);
