@@ -27,6 +27,14 @@ Even though the tokens may vest linearly over an extended period, virtual tokens
 - Two years into the vesting period, Alice releases the first portion of tokens by calling `release`. As a result, 50,000 FOO tokens are transferred to her address, and her vFOO balance is reduced from 100,000 to 50,000. Consequently, her overall voting power consists of 50,000 vFOO and 50,000 FOO tokens.
 - Once the four-year vesting period comes to an end, Alice releases the remaining tokens, which zeroes out her vFOO balance and transfers an additional 50,000 FOO tokens to her address.
 
+### Working with a large number of vesting schedules
+
+If your organization already knows the vesting schedules (or at least a big part of them) ahead of deployment and it's a large number of schedules, calling `createVestingSchedule` a hundred times is cumbersome and not very gas efficient. Instead you can use the `TokenVestingMerkle` contract, which is a wrapper around the `TokenVesting` contract that allows you to deploy a large number of vesting schedules easily by submitting a Merkle tree of the vesting schedules.
+
+The beneficiaries can later claim their schedules by providing a Merkle proof of their schedule.
+
+Please make sure you validate the different vesting schedule inputs (duration, amount, etc.), before you create your Merkle Tree. Calling `claimSchedule` with invalid inputs will revert and render the vesting schedule unclaimable for the beneficiary.
+
 ## 🎭🧑‍💻 Security audits
 
 - [Security audit](https://github.com/abdelhamidbakhta/token-vesting-contracts/blob/main/audits/hacken_audit_report.pdf) from [Hacken](https://hacken.io)
