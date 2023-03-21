@@ -7,10 +7,10 @@ import { Token } from "../contracts/Token.sol";
 import { TokenVesting } from "../contracts/TokenVesting.sol";
 
 contract DevScript is Script {
-    string constant mnemonic = "test test test test test test test test test test test junk";
+    string constant MNEMONIC = "test test test test test test test test test test test junk";
 
     function run() public {
-        (address deployer,) = deriveRememberKey(mnemonic, 0);
+        (address deployer,) = deriveRememberKey(MNEMONIC, 0);
         vm.startBroadcast(deployer);
 
         Token token = new Token("Test Token", "TT", 18, 100_000_000 ether);
