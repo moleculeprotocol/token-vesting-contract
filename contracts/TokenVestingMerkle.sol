@@ -47,8 +47,8 @@ contract TokenVestingMerkle is TokenVesting {
         require(MerkleProofLib.verify(_proof, merkleRoot, leaf), "TokenVesting: Invalid proof");
         require(!claimed[leaf], "TokenVesting: Already claimed");
 
-        _createVestingSchedule(_beneficiary, _start, _cliff, _duration, _slicePeriodSeconds, _revokable, _amount);
         claimed[leaf] = true;
+        _createVestingSchedule(_beneficiary, _start, _cliff, _duration, _slicePeriodSeconds, _revokable, _amount);
     }
 
     /**
