@@ -29,7 +29,7 @@ Even though the tokens may vest linearly over an extended period, virtual tokens
 
 ### Working with a large number of vesting schedules
 
-If your organization already knows the vesting schedules (or at least a big part of them) ahead of deployment and it's a large number of schedules, calling `createVestingSchedule` a hundred times is cumbersome and not very gas efficient. Instead you can use the `TokenVestingMerkle` contract, which is a wrapper around the `TokenVesting` contract that allows you to deploy a large number of vesting schedules easily by submitting a Merkle tree of the vesting schedules.
+If your organization already knows the vesting schedules (or at least a big part of them) ahead of deployment and it's a large number of schedules, calling `createVestingSchedule` a hundred times is cumbersome and not very gas efficient. Instead you can use the `TokenVestingMerkle` contract, which is a wrapper around the `TokenVesting` contract that allows you to deploy a large number of vesting schedules easily by submitting a Merkle tree of the vesting schedules when deploying the contract.
 
 The beneficiaries can later claim their schedules by providing a Merkle proof of their schedule.
 
