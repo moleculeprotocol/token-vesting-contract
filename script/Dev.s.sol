@@ -7,7 +7,7 @@ import { Token } from "../contracts/Token.sol";
 import { TokenVesting } from "../contracts/TokenVesting.sol";
 
 contract DevScript is Script {
-    string mnemonic = "test test test test test test test test test test test junk";
+    string constant mnemonic = "test test test test test test test test test test test junk";
 
     function run() public {
         (address deployer,) = deriveRememberKey(mnemonic, 0);
