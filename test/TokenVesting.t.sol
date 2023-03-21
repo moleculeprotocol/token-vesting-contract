@@ -262,6 +262,9 @@ contract TokenVestingTest is Test {
         tokenVesting.changeBeneficiary(vestingScheduleId, bob);
         vm.stopPrank();
 
+        assertEq(tokenVesting.balanceOf(address(alice)), 0);
+        assertEq(tokenVesting.balanceOf(address(bob)), 100 ether);
+
         // set time to half the vesting period
         uint256 halfTime = baseTime + duration / 2;
         tokenVesting.setCurrentTime(halfTime);
