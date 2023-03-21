@@ -32,8 +32,12 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     /// @dev The ERC20 number of decimals of the virtual token (this contract only supports native tokens with 18 decimals)
     uint8 public constant decimals = 18;
 
+    enum Status {
+        INITIALIZED, //0
+        REVOKED
+    }
+
     struct VestingSchedule {
-        bool initialized;
         // beneficiary of tokens after they are released
         address beneficiary;
         // cliff period in seconds
@@ -50,8 +54,8 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
         uint256 amountTotal;
         // amount of tokens released
         uint256 released;
-        // whether or not the vesting has been revoked
-        bool revoked;
+        // schedule status (initialized, revoked)
+        Status status;
     }
 
     // address of the ERC20 native token
@@ -76,8 +80,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @dev Reverts if the vesting schedule does not exist or has been revoked.
      */
     modifier onlyIfVestingScheduleNotRevoked(bytes32 vestingScheduleId) {
-        require(vestingSchedules[vestingScheduleId].initialized);
-        require(vestingSchedules[vestingScheduleId].revoked == false);
+        require(vestingSchedules[vestingScheduleId].status == Status.INITIALIZED);
         _;
     }
 
@@ -228,7 +231,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
         bytes32 vestingScheduleId = computeNextVestingScheduleIdForHolder(_beneficiary);
         uint256 cliff = _start.add(_cliff);
         vestingSchedules[vestingScheduleId] =
-            VestingSchedule(true, _beneficiary, cliff, _start, _duration, _slicePeriodSeconds, _revokable, _amount, 0, false);
+            VestingSchedule(_beneficiary, cliff, _start, _duration, _slicePeriodSeconds, _revokable, _amount, 0, Status.INITIALIZED);
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.add(_amount);
         vestingSchedulesIds.push(vestingScheduleId);
         uint256 currentVestingCount = holdersVestingScheduleCount[_beneficiary];
@@ -250,7 +253,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
         uint256 unreleased = vestingSchedule.amountTotal.sub(vestingSchedule.released);
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.sub(unreleased);
         holdersVestedAmount[vestingSchedule.beneficiary] = holdersVestedAmount[vestingSchedule.beneficiary].sub(unreleased);
-        vestingSchedule.revoked = true;
+        vestingSchedule.status = Status.REVOKED;
         emit Revoked(vestingScheduleId);
     }
 
@@ -391,7 +394,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      */
     function _computeReleasableAmount(VestingSchedule memory vestingSchedule) internal view returns (uint256) {
         uint256 currentTime = getCurrentTime();
-        if ((currentTime < vestingSchedule.cliff) || vestingSchedule.revoked) {
+        if ((currentTime < vestingSchedule.cliff) || vestingSchedule.status == Status.REVOKED) {
             return 0;
         } else if (currentTime >= vestingSchedule.start.add(vestingSchedule.duration)) {
             return vestingSchedule.amountTotal.sub(vestingSchedule.released);

@@ -177,7 +177,7 @@ contract TokenVestingTest is Test {
         assertEq(token.balanceOf(address(alice)), 50 ether);
 
         MockTokenVesting.VestingSchedule memory vestingSchedule = tokenVesting.getVestingSchedule(vestingScheduleId);
-        assertEq(vestingSchedule.revoked, true);
+        assertEq(vestingSchedule.status == TokenVesting.Status.REVOKED, true);
 
         assertEq(tokenVesting.getWithdrawableAmount(), 50 ether);
     }
