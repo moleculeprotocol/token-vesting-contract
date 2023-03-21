@@ -62,7 +62,12 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     bytes32[] private vestingSchedulesIds;
     mapping(bytes32 => VestingSchedule) private vestingSchedules;
     uint256 private vestingSchedulesTotalAmount;
-    mapping(address => uint256) private holdersVestingCount;
+
+    // This mapping is used to keep track of the number of vesting schedules for each beneficiary
+    mapping(address => uint256) private holdersVestingScheduleCount;
+
+    // This mapping is used to keep track of the total amount of vested tokens for each beneficiary
+    mapping(address => uint256) private holdersVestedAmount;
 
     event Released(bytes32 vestingSchedule, address beneficiary, uint256 amount);
     event Revoked(bytes32 vestingSchedule);
@@ -137,7 +142,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     /// @param user The user for whom the balance is calculated
     /// @return Balance of the user
     function balanceOf(address user) public view returns (uint256) {
-        return computeVestedAmountForHolder(user);
+        return holdersVestedAmount[user];
     }
 
     /**
@@ -145,7 +150,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @return the number of vesting schedules
      */
     function getVestingSchedulesCountByBeneficiary(address _beneficiary) external view returns (uint256) {
-        return holdersVestingCount[_beneficiary];
+        return holdersVestingScheduleCount[_beneficiary];
     }
 
     /**
@@ -233,8 +238,9 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
             VestingSchedule(true, _beneficiary, cliff, _start, _duration, _slicePeriodSeconds, _revokable, _amount, 0, false);
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.add(_amount);
         vestingSchedulesIds.push(vestingScheduleId);
-        uint256 currentVestingCount = holdersVestingCount[_beneficiary];
-        holdersVestingCount[_beneficiary] = currentVestingCount.add(1);
+        uint256 currentVestingCount = holdersVestingScheduleCount[_beneficiary];
+        holdersVestingScheduleCount[_beneficiary] = currentVestingCount.add(1);
+        holdersVestedAmount[_beneficiary] = holdersVestedAmount[_beneficiary].add(_amount);
     }
 
     /**
@@ -250,6 +256,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
         }
         uint256 unreleased = vestingSchedule.amountTotal.sub(vestingSchedule.released);
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.sub(unreleased);
+        holdersVestedAmount[vestingSchedule.beneficiary] = holdersVestedAmount[vestingSchedule.beneficiary].sub(unreleased);
         vestingSchedule.revoked = true;
         emit Revoked(vestingScheduleId);
     }
@@ -273,6 +280,15 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
         onlyIfVestingScheduleNotRevoked(vestingScheduleId)
     {
         require(newBeneficiary != address(0x0), "TokenVesting: new beneficiary must not be the zero address");
+        VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
+        uint256 unreleased = vestingSchedule.amountTotal.sub(vestingSchedule.released);
+
+        // Update the vested token amount for the old beneficiary by subtracting the unreleased amount
+        holdersVestedAmount[vestingSchedule.beneficiary] = holdersVestedAmount[vestingSchedule.beneficiary].sub(unreleased);
+
+        // Update the vested token amount for  the new beneficiary by adding the unreleased amount
+        holdersVestedAmount[newBeneficiary] = holdersVestedAmount[newBeneficiary].add(unreleased);
+
         vestingSchedules[vestingScheduleId].beneficiary = newBeneficiary;
     }
 
@@ -301,6 +317,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
         vestingSchedule.released = vestingSchedule.released.add(amount);
         address payable beneficiaryPayable = payable(vestingSchedule.beneficiary);
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.sub(amount);
+        holdersVestedAmount[vestingSchedule.beneficiary] = holdersVestedAmount[vestingSchedule.beneficiary].sub(amount);
         emit Released(vestingScheduleId, vestingSchedule.beneficiary, amount);
         _nativeToken.safeTransfer(beneficiaryPayable, amount);
     }
@@ -319,7 +336,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @param holder address of the holder & beneficiary
      */
     function releaseAvailableTokensForHolder(address holder) public nonReentrant {
-        uint256 vestingScheduleCount = holdersVestingCount[holder];
+        uint256 vestingScheduleCount = holdersVestingScheduleCount[holder];
         for (uint256 i = 0; i < vestingScheduleCount; i++) {
             bytes32 vestingScheduleId = computeVestingScheduleIdForAddressAndIndex(holder, i);
             uint256 releasable = computeReleasableAmount(vestingScheduleId);
@@ -347,21 +364,6 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Computes the total vested amount of tokens (schedule total amount minus already released tokens) for the given address/holder
-     * @return the vested amount
-     */
-    function computeVestedAmountForHolder(address holder) public view returns (uint256) {
-        uint256 vestedTotalAmount = 0;
-        uint256 vestingScheduleCount = holdersVestingCount[holder];
-        for (uint256 i = 0; i < vestingScheduleCount; i++) {
-            bytes32 vestingScheduleId = computeVestingScheduleIdForAddressAndIndex(holder, i);
-            VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
-            vestedTotalAmount = vestedTotalAmount.add(vestingSchedule.amountTotal - vestingSchedule.released);
-        }
-        return vestedTotalAmount;
-    }
-
-    /**
      * @notice Returns the vesting schedule information for a given identifier.
      * @return the vesting schedule structure information
      */
@@ -381,14 +383,14 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @dev Computes the next vesting schedule identifier for a given holder address.
      */
     function computeNextVestingScheduleIdForHolder(address holder) public view returns (bytes32) {
-        return computeVestingScheduleIdForAddressAndIndex(holder, holdersVestingCount[holder]);
+        return computeVestingScheduleIdForAddressAndIndex(holder, holdersVestingScheduleCount[holder]);
     }
 
     /**
      * @dev Returns the last vesting schedule for a given holder address.
      */
     function getLastVestingScheduleForHolder(address holder) public view returns (VestingSchedule memory) {
-        return vestingSchedules[computeVestingScheduleIdForAddressAndIndex(holder, holdersVestingCount[holder] - 1)];
+        return vestingSchedules[computeVestingScheduleIdForAddressAndIndex(holder, holdersVestingScheduleCount[holder] - 1)];
     }
 
     /**

@@ -220,7 +220,7 @@ contract TokenVestingTest is Test {
         uint256 halfTime = baseTime + duration / 2;
         tokenVesting.setCurrentTime(halfTime);
 
-        assertEq(tokenVesting.computeVestedAmountForHolder(alice), 150 ether);
+        assertEq(tokenVesting.balanceOf(alice), 150 ether);
     }
 
     function testClaimAvailableTokens() public {
@@ -239,13 +239,13 @@ contract TokenVestingTest is Test {
         uint256 halfTime = baseTime + duration / 2;
         tokenVesting.setCurrentTime(halfTime);
 
-        assertEq(tokenVesting.computeVestedAmountForHolder(alice), 150 ether);
+        assertEq(tokenVesting.balanceOf(alice), 150 ether);
 
         vm.startPrank(alice);
         tokenVesting.releaseAvailableTokensForHolder(alice);
         vm.stopPrank();
 
-        assertEq(tokenVesting.computeVestedAmountForHolder(alice), 87.5 ether);
+        assertEq(tokenVesting.balanceOf(alice), 87.5 ether);
         assertEq(token.balanceOf(address(alice)), 62.5 ether);
     }
 
