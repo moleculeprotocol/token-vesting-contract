@@ -380,13 +380,6 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     }
 
     /**
-     * @dev Returns the last vesting schedule for a given holder address.
-     */
-    function getLastVestingScheduleForHolder(address holder) external view returns (VestingSchedule memory) {
-        return vestingSchedules[computeVestingScheduleIdForAddressAndIndex(holder, holdersVestingScheduleCount[holder] - 1)];
-    }
-
-    /**
      * @dev Computes the vesting schedule identifier for an address and an index.
      */
     function computeVestingScheduleIdForAddressAndIndex(address holder, uint256 index) public pure returns (bytes32) {
