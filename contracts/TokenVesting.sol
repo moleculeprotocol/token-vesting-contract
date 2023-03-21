@@ -73,14 +73,6 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     event Revoked(bytes32 vestingSchedule);
 
     /**
-     * @dev Reverts if no vesting schedule matches the passed identifier.
-     */
-    modifier onlyIfVestingScheduleExists(bytes32 vestingScheduleId) {
-        require(vestingSchedules[vestingScheduleId].initialized == true);
-        _;
-    }
-
-    /**
      * @dev Reverts if the vesting schedule does not exist or has been revoked.
      */
     modifier onlyIfVestingScheduleNotRevoked(bytes32 vestingScheduleId) {
