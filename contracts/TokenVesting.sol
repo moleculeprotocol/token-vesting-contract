@@ -195,7 +195,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
         uint256 _slicePeriodSeconds,
         bool _revokable,
         uint256 _amount
-    ) public onlyOwner {
+    ) external onlyOwner {
         _createVestingSchedule(_beneficiary, _start, _cliff, _duration, _slicePeriodSeconds, _revokable, _amount);
     }
 
@@ -239,12 +239,12 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @notice Revokes the vesting schedule for given identifier.
      * @param vestingScheduleId the vesting schedule identifier
      */
-    function revoke(bytes32 vestingScheduleId) public onlyOwner onlyIfVestingScheduleNotRevoked(vestingScheduleId) {
+    function revoke(bytes32 vestingScheduleId) external onlyOwner onlyIfVestingScheduleNotRevoked(vestingScheduleId) {
         VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
         require(vestingSchedule.revokable == true, "TokenVesting: vesting is not revokable");
         uint256 vestedAmount = _computeReleasableAmount(vestingSchedule);
         if (vestedAmount > 0) {
-            release(vestingScheduleId, vestedAmount);
+            _release(vestingScheduleId, vestedAmount);
         }
         uint256 unreleased = vestingSchedule.amountTotal.sub(vestingSchedule.released);
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.sub(unreleased);
@@ -257,7 +257,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @notice Pauses or unpauses the release of tokens
      * @param paused true if the release of tokens should be paused, false otherwise
      */
-    function setReleasePaused(bool paused) public onlyOwner {
+    function setReleasePaused(bool paused) external onlyOwner {
         _releasePaused = paused;
     }
 
@@ -267,7 +267,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @param newBeneficiary address of the new beneficiary
      */
     function changeBeneficiary(bytes32 vestingScheduleId, address newBeneficiary)
-        public
+        external
         onlyOwner
         onlyIfVestingScheduleNotRevoked(vestingScheduleId)
     {
@@ -288,7 +288,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @notice Withdraw the specified amount if possible.
      * @param amount the amount to withdraw
      */
-    function withdraw(uint256 amount) public nonReentrant onlyOwner {
+    function withdraw(uint256 amount) external nonReentrant onlyOwner {
         require(getWithdrawableAmount() >= amount, "TokenVesting: not enough withdrawable funds");
         _nativeToken.safeTransfer(owner(), amount);
     }
@@ -319,7 +319,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @param vestingScheduleId the vesting schedule identifier
      * @param amount the amount to release
      */
-    function release(bytes32 vestingScheduleId, uint256 amount) public nonReentrant onlyIfVestingScheduleNotRevoked(vestingScheduleId) {
+    function release(bytes32 vestingScheduleId, uint256 amount) external nonReentrant onlyIfVestingScheduleNotRevoked(vestingScheduleId) {
         _release(vestingScheduleId, amount);
     }
 
@@ -327,7 +327,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
      * @notice Release all available tokens for holder address
      * @param holder address of the holder & beneficiary
      */
-    function releaseAvailableTokensForHolder(address holder) public nonReentrant {
+    function releaseAvailableTokensForHolder(address holder) external nonReentrant {
         uint256 vestingScheduleCount = holdersVestingScheduleCount[holder];
         for (uint256 i = 0; i < vestingScheduleCount; i++) {
             bytes32 vestingScheduleId = computeVestingScheduleIdForAddressAndIndex(holder, i);
@@ -381,7 +381,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard {
     /**
      * @dev Returns the last vesting schedule for a given holder address.
      */
-    function getLastVestingScheduleForHolder(address holder) public view returns (VestingSchedule memory) {
+    function getLastVestingScheduleForHolder(address holder) external view returns (VestingSchedule memory) {
         return vestingSchedules[computeVestingScheduleIdForAddressAndIndex(holder, holdersVestingScheduleCount[holder] - 1)];
     }
 
