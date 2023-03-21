@@ -13,6 +13,11 @@ Vesting schedules are optionally revokable by the owner. Additionally the smart 
 
 This work is based on the `TokenVesting` [contract](https://github.com/abdelhamidbakhta/token-vesting-contracts) by [@abdelhamidbakhta](https://github.com/abdelhamidbakhta) and was extended with the virtual token functionality and a few convenience features.
 
+### Some of the added features
+- `changeBeneficiary` function to migrate vesting schedules to a new address
+- `releaseAvailableTokensForHolder` function to release all available tokens for a beneficiary
+- `setReleasePaused` function to globally pause token releases
+
 ### What is a virtual token?
 
 A virtual token refers to the representation of an individual's unvested tokens as a non-transferable ERC20 balance, which can be utilized for governance purposes (such as Snapshot). Drawing inspiration from CowSwap's [vCOW](https://github.com/cowprotocol/token) token, virtual tokens enable decentralized autonomous organizations (DAOs) and other entities to establish vesting schedules for team members, investors, and contributors, which linearly vest over a predetermined timeframe.
