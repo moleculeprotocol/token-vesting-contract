@@ -79,6 +79,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard, Pausable {
      * @dev Reverts if the vesting schedule does not exist or has been revoked.
      */
     modifier onlyIfVestingScheduleNotRevoked(bytes32 vestingScheduleId) {
+        //slither-disable-next-line incorrect-equality
         require(vestingSchedules[vestingScheduleId].status == Status.INITIALIZED);
         _;
     }
@@ -409,6 +410,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard, Pausable {
      */
     function _computeReleasableAmount(VestingSchedule memory vestingSchedule) internal view returns (uint256) {
         uint256 currentTime = getCurrentTime();
+        //slither-disable-next-line incorrect-equality
         if ((currentTime < vestingSchedule.cliff) || vestingSchedule.status == Status.REVOKED) {
             return 0;
         } else if (currentTime >= vestingSchedule.start.add(vestingSchedule.duration)) {
@@ -417,7 +419,11 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard, Pausable {
             uint256 timeFromStart = currentTime.sub(vestingSchedule.start);
             uint256 secondsPerSlice = vestingSchedule.slicePeriodSeconds;
             uint256 vestedSlicePeriods = timeFromStart.div(secondsPerSlice);
+            // Disable warning: duration and token amounts are checked in schedule creation and prevent underflow/overflow
+            //slither-disable-next-line divide-before-multiply
             uint256 vestedSeconds = vestedSlicePeriods.mul(secondsPerSlice);
+            // Disable warning: duration and token amounts are checked in schedule creation and prevent underflow/overflow
+            //slither-disable-next-line divide-before-multiply
             uint256 vestedAmount = vestingSchedule.amountTotal.mul(vestedSeconds).div(vestingSchedule.duration);
             vestedAmount = vestedAmount.sub(vestingSchedule.released);
             return vestedAmount;
