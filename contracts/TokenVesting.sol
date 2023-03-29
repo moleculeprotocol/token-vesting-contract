@@ -12,15 +12,18 @@ abstract contract IERC20Extended is IERC20 {
     function decimals() public virtual returns (uint8);
 }
 
-/// @title TokenVesting - This contract enables the storage of
-/// tokens alongside a vesting schdule that release a subset
-/// of the total amount stored on a time schedule. This implementation
-/// also allows the owner to revoke a given schedule's tokens
-/// in the case that a beneficiary does not meet the vesting
-/// requirement.
-/// Original repository can be found at:
-/// https://github.com/abdelhamidbakhta/token-vesting-contracts
-/// @author Abdelhamid Bakhta - abdelhamid.bakhta@gmail.com
+/// @title TokenVesting - On-Chain vesting scheme enabled by smart contracts.
+/// The TokenVesting contract can release its token balance gradually like a
+/// typical vesting scheme, with a cliff and vesting period. The contract owner
+/// can create vesting schedules for different users, even multiple for the same person.
+/// Vesting schedules are optionally revokable by the owner. Additionally the
+/// smart contract functions as an ERC20 compatible non-transferable virtual
+/// token which can be used e.g. for governance.
+/// This work is based on the TokenVesting contract by Abdelhamid Bakhta
+/// (https://github.com/abdelhamidbakhta/token-vesting-contracts)
+/// and was extended with the virtual token functionality and partially rewritten.
+/// @author Schmackofant - schmackofant@protonmail.com
+
 contract TokenVesting is IERC20, Ownable, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20Extended;
 
