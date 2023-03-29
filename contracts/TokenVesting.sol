@@ -6,7 +6,6 @@ import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
 
 abstract contract IERC20Extended is IERC20 {
@@ -23,7 +22,6 @@ abstract contract IERC20Extended is IERC20 {
 /// https://github.com/abdelhamidbakhta/token-vesting-contracts
 /// @author Abdelhamid Bakhta - abdelhamid.bakhta@gmail.com
 contract TokenVesting is IERC20, Ownable, ReentrancyGuard, Pausable {
-    using SafeMath for uint256;
     using SafeERC20 for IERC20Extended;
 
     /// @dev The ERC20 name of the virtual token
@@ -236,14 +234,14 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard, Pausable {
         require(_amount <= 2 ** 200, "TokenVesting: amount must be <= 2 ** 200");
         require(_duration <= 50 * 365 * 24 * 60 * 60, "TokenVesting: duration must be <= 50 years");
         bytes32 vestingScheduleId = computeNextVestingScheduleIdForHolder(_beneficiary);
-        uint256 cliff = _start.add(_cliff);
+        uint256 cliff = _start + _cliff;
         vestingSchedules[vestingScheduleId] =
             VestingSchedule(_beneficiary, cliff, _start, _duration, _slicePeriodSeconds, _revokable, _amount, 0, Status.INITIALIZED);
-        vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.add(_amount);
+        vestingSchedulesTotalAmount = vestingSchedulesTotalAmount + _amount;
         vestingSchedulesIds.push(vestingScheduleId);
         uint256 currentVestingCount = holdersVestingScheduleCount[_beneficiary];
-        holdersVestingScheduleCount[_beneficiary] = currentVestingCount.add(1);
-        holdersVestedAmount[_beneficiary] = holdersVestedAmount[_beneficiary].add(_amount);
+        holdersVestingScheduleCount[_beneficiary] = currentVestingCount + 1;
+        holdersVestedAmount[_beneficiary] = holdersVestedAmount[_beneficiary] + _amount;
     }
 
     /**
@@ -257,9 +255,9 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard, Pausable {
         if (vestedAmount > 0) {
             _release(vestingScheduleId, vestedAmount);
         }
-        uint256 unreleased = vestingSchedule.amountTotal.sub(vestingSchedule.released);
-        vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.sub(unreleased);
-        holdersVestedAmount[vestingSchedule.beneficiary] = holdersVestedAmount[vestingSchedule.beneficiary].sub(unreleased);
+        uint256 unreleased = vestingSchedule.amountTotal - vestingSchedule.released;
+        vestingSchedulesTotalAmount = vestingSchedulesTotalAmount - unreleased;
+        holdersVestedAmount[vestingSchedule.beneficiary] = holdersVestedAmount[vestingSchedule.beneficiary] - unreleased;
         vestingSchedule.status = Status.REVOKED;
         emit Revoked(vestingScheduleId);
     }
@@ -288,13 +286,13 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard, Pausable {
     {
         require(newBeneficiary != address(0x0), "TokenVesting: new beneficiary must not be the zero address");
         VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
-        uint256 unreleased = vestingSchedule.amountTotal.sub(vestingSchedule.released);
+        uint256 unreleased = vestingSchedule.amountTotal - vestingSchedule.released;
 
         // Update the vested token amount for the old beneficiary by subtracting the unreleased amount
-        holdersVestedAmount[vestingSchedule.beneficiary] = holdersVestedAmount[vestingSchedule.beneficiary].sub(unreleased);
+        holdersVestedAmount[vestingSchedule.beneficiary] = holdersVestedAmount[vestingSchedule.beneficiary] - unreleased;
 
         // Update the vested token amount for  the new beneficiary by adding the unreleased amount
-        holdersVestedAmount[newBeneficiary] = holdersVestedAmount[newBeneficiary].add(unreleased);
+        holdersVestedAmount[newBeneficiary] = holdersVestedAmount[newBeneficiary] + unreleased;
 
         vestingSchedules[vestingScheduleId].beneficiary = newBeneficiary;
     }
@@ -320,10 +318,10 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard, Pausable {
         require(isBeneficiary || isOwner, "TokenVesting: only beneficiary and owner can release vested tokens");
         uint256 vestedAmount = _computeReleasableAmount(vestingSchedule);
         require(vestedAmount >= amount, "TokenVesting: cannot release tokens, not enough vested tokens");
-        vestingSchedule.released = vestingSchedule.released.add(amount);
+        vestingSchedule.released = vestingSchedule.released + amount;
         address beneficiaryPayable = vestingSchedule.beneficiary;
-        vestingSchedulesTotalAmount = vestingSchedulesTotalAmount.sub(amount);
-        holdersVestedAmount[vestingSchedule.beneficiary] = holdersVestedAmount[vestingSchedule.beneficiary].sub(amount);
+        vestingSchedulesTotalAmount = vestingSchedulesTotalAmount - amount;
+        holdersVestedAmount[vestingSchedule.beneficiary] = holdersVestedAmount[vestingSchedule.beneficiary] - amount;
         emit Released(vestingScheduleId, vestingSchedule.beneficiary, amount);
         _nativeToken.safeTransfer(beneficiaryPayable, amount);
     }
@@ -387,7 +385,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard, Pausable {
      * @return the amount of tokens
      */
     function getWithdrawableAmount() public view returns (uint256) {
-        return _nativeToken.balanceOf(address(this)).sub(vestingSchedulesTotalAmount);
+        return _nativeToken.balanceOf(address(this)) - vestingSchedulesTotalAmount;
     }
 
     /**
@@ -413,19 +411,19 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard, Pausable {
         //slither-disable-next-line incorrect-equality
         if ((currentTime < vestingSchedule.cliff) || vestingSchedule.status == Status.REVOKED) {
             return 0;
-        } else if (currentTime >= vestingSchedule.start.add(vestingSchedule.duration)) {
-            return vestingSchedule.amountTotal.sub(vestingSchedule.released);
+        } else if (currentTime >= vestingSchedule.start + vestingSchedule.duration) {
+            return vestingSchedule.amountTotal - vestingSchedule.released;
         } else {
-            uint256 timeFromStart = currentTime.sub(vestingSchedule.start);
+            uint256 timeFromStart = currentTime - vestingSchedule.start;
             uint256 secondsPerSlice = vestingSchedule.slicePeriodSeconds;
-            uint256 vestedSlicePeriods = timeFromStart.div(secondsPerSlice);
+            uint256 vestedSlicePeriods = timeFromStart / secondsPerSlice;
             // Disable warning: duration and token amounts are checked in schedule creation and prevent underflow/overflow
             //slither-disable-next-line divide-before-multiply
-            uint256 vestedSeconds = vestedSlicePeriods.mul(secondsPerSlice);
+            uint256 vestedSeconds = vestedSlicePeriods * secondsPerSlice;
             // Disable warning: duration and token amounts are checked in schedule creation and prevent underflow/overflow
             //slither-disable-next-line divide-before-multiply
-            uint256 vestedAmount = vestingSchedule.amountTotal.mul(vestedSeconds).div(vestingSchedule.duration);
-            vestedAmount = vestedAmount.sub(vestingSchedule.released);
+            uint256 vestedAmount = vestingSchedule.amountTotal * vestedSeconds / vestingSchedule.duration;
+            vestedAmount = vestedAmount - vestingSchedule.released;
             return vestedAmount;
         }
     }
