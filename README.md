@@ -35,18 +35,14 @@ The beneficiaries can later claim their schedules by providing a Merkle proof of
 
 Please make sure you validate the different vesting schedule inputs (duration, amount, etc.), before you create your Merkle Tree. Calling `claimSchedule` with invalid inputs will revert and render the vesting schedule unclaimable for the beneficiary.
 
-## 🎭🧑‍💻 Security audits
-
-- [Security audit](https://github.com/abdelhamidbakhta/token-vesting-contracts/blob/main/audits/hacken_audit_report.pdf) from [Hacken](https://hacken.io)
-
-The original contract by [@abdelhamidbakhta](https://github.com/abdelhamidbakhta) was audited in 2021. This version leaves the core logic around creating and managing vesting schedules and the computation untouched (see [diff](https://github.com/schmackofant/token-vesting/compare/1407a87...c2d274d#diff-c1f2ee83cfe329d4820d59fb7e1762e3777d08287ef8766d891323ef98d5b65c)) and merely expands the contract with the virtual token functionality and a few minor changes.
-
 ### Main changes
-- `changeBeneficiary` function to migrate vesting schedules to a new address
 - `releaseAvailableTokensForHolder` function to release all available tokens for a beneficiary (especially relevant if the beneficiary has multiple vesting schedules)
-- `setPaused` function to globally pause token releases and claiming schedules (the latter only in the case of using `TokenVestingMerkle`). Uses OpenZepplin's `Pausable` contract.
+- `setPaused` function to globally pause token releases and claiming schedules (the latter only in the case of using `TokenVestingMerkle`). Uses OpenZepplin's `Pausable` contract. The main use case for this is a) as a safety measure in case of an emergency and b) to launch the contract in a paused state and unpause it once the DAO or organization has launched and everything is ready for people to start releasing their tokens.
 
 ## ⚠️ Important notes and caveats
+Please read the following notes carefully before using this contract. They are important to understand the limitations of this contract and how to use it properly.
+
+- In general the DAO or organization deploying this contract has to do the due diligence on the native token they want to use. This contract only supports standard ERC20 implementations. If the native token is not a standard ERC20 implementation (e.g. restricting or modifying transfer functions, being a rebase token, etc.), the contract might not work as expected and it is strongly recommended to not use this contract with such a token.
 - This contract is only compatible with native tokens that have 18 decimals. Deyploment will revert otherwise.
 - You should never use this contract with a native token that is rebasing down as this could lead to calculation errors. For example, if the `TokenVesting` smart contract's token balance decreases due to rebasing, the beneficiary might be able to release fewer tokens than anticipated. This occurs when the contract's token balance becomes smaller than the total amount specified in the vesting schedule.
 - The contract is tested with and allows a schedule duration `<= 50 years` and a token amount `<= 2^200` (approx. 1.6 Tredecillion tokens). If your requirements are more extreme than that, you should probably not use this contract and instead implement a custom solution.
