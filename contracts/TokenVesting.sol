@@ -66,7 +66,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     IERC20Metadata public immutable nativeToken;
 
     /// @dev This mapping is used to keep track of the vesting schedule ids
-    bytes32[] private vestingSchedulesIds;
+    bytes32[] public vestingSchedulesIds;
 
     /// @dev This mapping is used to keep track of the vesting schedules
     mapping(bytes32 => VestingSchedule) private vestingSchedules;
@@ -74,8 +74,8 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     /// @notice total amount of native tokens in all vesting schedules
     uint256 public vestingSchedulesTotalAmount;
 
-    /// @dev This mapping is used to keep track of the number of vesting schedules for each beneficiary
-    mapping(address => uint256) private holdersVestingScheduleCount;
+    /// @notice This mapping is used to keep track of the number of vesting schedules for each beneficiary
+    mapping(address => uint256) public holdersVestingScheduleCount;
 
     /// @dev This mapping is used to keep track of the total amount of vested tokens for each beneficiary
     mapping(address => uint256) private holdersVestedAmount;
@@ -156,23 +156,6 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     /// @return Balance of the user
     function balanceOf(address user) public view returns (uint256) {
         return holdersVestedAmount[user];
-    }
-
-    /**
-     * @notice Returns the number of vesting schedules associated to a beneficiary.
-     * @return the number of vesting schedules
-     */
-    function getVestingSchedulesCountByBeneficiary(address _beneficiary) external view returns (uint256) {
-        return holdersVestingScheduleCount[_beneficiary];
-    }
-
-    /**
-     * @notice Returns the vesting schedule id at the given index.
-     * @return the vesting id
-     */
-    function getVestingIdAtIndex(uint256 index) external view returns (bytes32) {
-        require(index < vestingSchedulesIds.length, "TokenVesting: index out of bounds");
-        return vestingSchedulesIds[index];
     }
 
     /**

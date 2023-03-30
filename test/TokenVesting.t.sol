@@ -51,7 +51,7 @@ contract TokenVestingTest is Test {
         tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
         vm.stopPrank();
 
-        assertEq(tokenVesting.getVestingSchedulesCountByBeneficiary(alice), 1);
+        assertEq(tokenVesting.holdersVestingScheduleCount(alice), 1);
 
         bytes32 vestingScheduleId = tokenVesting.computeVestingScheduleIdForAddressAndIndex(alice, 0);
 
@@ -219,7 +219,7 @@ contract TokenVestingTest is Test {
         tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
         tokenVesting.createVestingSchedule(alice, baseTime, 0, duration * 2, 1, true, 50 ether);
         assertEq(tokenVesting.getVestingSchedulesIds().length, 2);
-        assertEq(tokenVesting.getVestingSchedulesCountByBeneficiary(alice), 2);
+        assertEq(tokenVesting.holdersVestingScheduleCount(alice), 2);
         vm.stopPrank();
 
         // set time to half the vesting period
@@ -238,7 +238,7 @@ contract TokenVestingTest is Test {
         tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
         tokenVesting.createVestingSchedule(alice, baseTime, 0, duration * 2, 1, true, 50 ether);
         assertEq(tokenVesting.getVestingSchedulesIds().length, 2);
-        assertEq(tokenVesting.getVestingSchedulesCountByBeneficiary(alice), 2);
+        assertEq(tokenVesting.holdersVestingScheduleCount(alice), 2);
         vm.stopPrank();
 
         // set time to half the vesting period
