@@ -61,7 +61,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
 
     bytes32[] private vestingSchedulesIds;
     mapping(bytes32 => VestingSchedule) private vestingSchedules;
-    uint256 private vestingSchedulesTotalAmount;
+    uint256 public vestingSchedulesTotalAmount;
 
     // This mapping is used to keep track of the number of vesting schedules for each beneficiary
     mapping(address => uint256) private holdersVestingScheduleCount;
@@ -167,14 +167,6 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      */
     function getVestingScheduleByAddressAndIndex(address holder, uint256 index) external view returns (VestingSchedule memory) {
         return getVestingSchedule(computeVestingScheduleIdForAddressAndIndex(holder, index));
-    }
-
-    /**
-     * @notice Returns the total amount of vesting schedules.
-     * @return the total amount of vesting schedules
-     */
-    function getVestingSchedulesTotalAmount() external view returns (uint256) {
-        return vestingSchedulesTotalAmount;
     }
 
     /**
