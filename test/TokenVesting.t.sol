@@ -66,13 +66,13 @@ contract TokenVestingTest is Test {
 
         // check that only beneficiary can try to release vested tokens
         vm.startPrank(bob);
-        vm.expectRevert("TokenVesting: only beneficiary and owner can release vested tokens");
+        vm.expectRevert(TokenVesting.Unauthorized.selector);
         tokenVesting.release(vestingScheduleId, 100 ether);
         vm.stopPrank();
 
         // check that beneficiary cannot release more than the vested amount
         vm.startPrank(alice);
-        vm.expectRevert("TokenVesting: cannot release tokens, not enough vested tokens");
+        vm.expectRevert(TokenVesting.InsufficientReleasableTokens.selector);
         tokenVesting.release(vestingScheduleId, 100 ether);
         vm.stopPrank();
 
@@ -230,6 +230,32 @@ contract TokenVestingTest is Test {
     }
 
     function testClaimAvailableTokens() public {
+        uint256 baseTime = block.timestamp;
+        uint256 duration = 1000;
+
+        vm.startPrank(deployer);
+        token.transfer(address(tokenVesting), 1000 ether);
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, duration * 2, 1, true, 50 ether);
+        assertEq(tokenVesting.getVestingSchedulesIds().length, 2);
+        assertEq(tokenVesting.holdersVestingScheduleCount(alice), 2);
+        vm.stopPrank();
+
+        // set time to half the vesting period
+        uint256 halfTime = baseTime + duration / 2;
+        vm.warp(halfTime);
+
+        assertEq(tokenVesting.balanceOf(alice), 150 ether);
+
+        vm.startPrank(alice);
+        tokenVesting.releaseAvailableTokensForHolder(alice);
+        vm.stopPrank();
+
+        assertEq(tokenVesting.balanceOf(alice), 87.5 ether);
+        assertEq(token.balanceOf(address(alice)), 62.5 ether);
+    }
+
+    function testCannotClaimMoreThanAvailable() public {
         uint256 baseTime = block.timestamp;
         uint256 duration = 1000;
 

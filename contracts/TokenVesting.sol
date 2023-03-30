@@ -99,10 +99,13 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
 
     error DecimalsError();
     error InsufficientTokensInContract();
+    error InsufficientReleasableTokens();
     error InvalidDuration();
     error InvalidAmount();
     error InvalidSlicePeriod();
     error DurationShorterThanCliff();
+    error NotRevokable();
+    error Unauthorized();
 
     /**
      * @notice Creates a vesting contract.
@@ -233,7 +236,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      */
     function revoke(bytes32 vestingScheduleId) external onlyOwner onlyIfVestingScheduleNotRevoked(vestingScheduleId) {
         VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
-        require(vestingSchedule.revokable, "TokenVesting: vesting is not revokable");
+        if (!vestingSchedule.revokable) revert NotRevokable();
         if (_computeReleasableAmount(vestingSchedule) > 0) {
             _release(vestingScheduleId, _computeReleasableAmount(vestingSchedule));
         }
@@ -261,7 +264,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @param amount the amount to withdraw
      */
     function withdraw(uint256 amount) external nonReentrant onlyOwner {
-        require(getWithdrawableAmount() >= amount, "TokenVesting: not enough withdrawable funds");
+        if (amount > getWithdrawableAmount()) revert InsufficientTokensInContract();
         nativeToken.safeTransfer(owner(), amount);
     }
 
@@ -274,8 +277,8 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
         bool isBeneficiary = msg.sender == vestingSchedule.beneficiary;
         bool isOwner = msg.sender == owner();
-        require(isBeneficiary || isOwner, "TokenVesting: only beneficiary and owner can release vested tokens");
-        require(_computeReleasableAmount(vestingSchedule) >= amount, "TokenVesting: cannot release tokens, not enough vested tokens");
+        if (!isBeneficiary && !isOwner) revert Unauthorized();
+        if (amount > _computeReleasableAmount(vestingSchedule)) revert InsufficientReleasableTokens();
         vestingSchedule.released = vestingSchedule.released + amount;
         address beneficiaryPayable = vestingSchedule.beneficiary;
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount - amount;
@@ -303,7 +306,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @param holder address of the holder & beneficiary
      */
     function releaseAvailableTokensForHolder(address holder) external whenNotPaused nonReentrant {
-        require(msg.sender == holder || msg.sender == owner(), "TokenVesting: only beneficiary and owner can release vested tokens");
+        if (msg.sender != holder && msg.sender != owner()) revert Unauthorized();
         uint256 vestingScheduleCount = holdersVestingScheduleCount[holder];
         for (uint256 i = 0; i < vestingScheduleCount; i++) {
             bytes32 vestingScheduleId = computeVestingScheduleIdForAddressAndIndex(holder, i);
