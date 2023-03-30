@@ -97,6 +97,9 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     /// will never be supported.
     error NotSupported();
 
+    error ZeroAddress();
+    error DecimalsError();
+
     /**
      * @notice Creates a vesting contract.
      * @param token_ address of the ERC20 native token contract
@@ -104,9 +107,9 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @param _symbol symbol of the virtual token
      */
     constructor(IERC20Metadata token_, string memory _name, string memory _symbol) {
-        require(address(token_) != address(0x0));
+        if (address(token_) == address(0x0)) revert ZeroAddress();
         nativeToken = IERC20Metadata(token_);
-        require(nativeToken.decimals() == 18, "TokenVesting: only native tokens with 18 decimals are supported");
+        if (nativeToken.decimals() != 18) revert DecimalsError();
         name = _name;
         symbol = _symbol;
     }

@@ -425,7 +425,7 @@ contract TokenVestingTest is Test {
     function testNativeTokenDecimals() public {
         vm.startPrank(deployer);
         Token customToken = new Token("6 Decimals Token", "6DT", 6, 100 ether);
-        vm.expectRevert("TokenVesting: only native tokens with 18 decimals are supported");
+        vm.expectRevert(TokenVesting.DecimalsError.selector);
         new MockTokenVesting(IERC20Metadata(customToken), "Vesting", "v6DT");
         vm.stopPrank();
     }
