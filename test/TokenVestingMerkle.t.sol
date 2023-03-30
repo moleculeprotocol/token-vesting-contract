@@ -38,27 +38,18 @@ contract TokenVestingMerkleTest is Test {
         assertEq(tokenVesting.balanceOf(alice), 0);
 
         vm.startPrank(alice);
-        tokenVesting.claimSchedule(aliceProof, alice, 1622551248, 0, 1000, 1, true, 20000 ether);
+        tokenVesting.claimSchedule(aliceProof, 1622551248, 0, 1000, 1, true, 20000 ether);
         vm.stopPrank();
 
         assertEq(tokenVesting.balanceOf(alice), 20000 ether);
         assertEq(tokenVesting.scheduleClaimed(alice, 1622551248, 0, 1000, 1, true, 20000 ether), true);
     }
 
-    function testOnlyBeneficiaryCanClaim() public {
-        vm.startPrank(bob);
-        vm.expectRevert(TokenVestingMerkle.Unauthorized.selector);
-        tokenVesting.claimSchedule(aliceProof, alice, 1622551248, 0, 1000, 1, true, 20000 ether);
-        vm.stopPrank();
-
-        assertEq(tokenVesting.balanceOf(bob), 0);
-    }
-
     function testCanOnlyClaimOnce() public {
         vm.startPrank(alice);
-        tokenVesting.claimSchedule(aliceProof, alice, 1622551248, 0, 1000, 1, true, 20000 ether);
+        tokenVesting.claimSchedule(aliceProof, 1622551248, 0, 1000, 1, true, 20000 ether);
         vm.expectRevert(TokenVestingMerkle.AlreadyClaimed.selector);
-        tokenVesting.claimSchedule(aliceProof, alice, 1622551248, 0, 1000, 1, true, 20000 ether);
+        tokenVesting.claimSchedule(aliceProof, 1622551248, 0, 1000, 1, true, 20000 ether);
         vm.stopPrank();
 
         assertEq(tokenVesting.balanceOf(alice), 20000 ether);
@@ -69,13 +60,13 @@ contract TokenVestingMerkleTest is Test {
 
         // Pass wrong number of tokens
         vm.expectRevert(TokenVestingMerkle.InvalidProof.selector);
-        tokenVesting.claimSchedule(aliceProof, alice, 1622551248, 0, 1000, 1, true, 30000 ether);
+        tokenVesting.claimSchedule(aliceProof, 1622551248, 0, 1000, 1, true, 30000 ether);
 
         // Pass invalid proof
         aliceProof[0] = 0xca6d546259ec0929fd20fbc9a057c980806abef37935fb5ca5f6a179718f1481;
 
         vm.expectRevert(TokenVestingMerkle.InvalidProof.selector);
-        tokenVesting.claimSchedule(aliceProof, alice, 1622551248, 0, 1000, 1, true, 20000 ether);
+        tokenVesting.claimSchedule(aliceProof, 1622551248, 0, 1000, 1, true, 20000 ether);
         vm.stopPrank();
 
         assertEq(tokenVesting.balanceOf(alice), 0);
@@ -90,7 +81,7 @@ contract TokenVestingMerkleTest is Test {
 
         vm.startPrank(alice);
         vm.expectRevert("TokenVesting: cannot create vesting schedule because of insufficient tokens in contract");
-        tokenVesting.claimSchedule(aliceProof, alice, 1622551248, 0, 1000, 1, true, 20000 ether);
+        tokenVesting.claimSchedule(aliceProof, 1622551248, 0, 1000, 1, true, 20000 ether);
         vm.stopPrank();
 
         assertEq(tokenVesting.scheduleClaimed(alice, 1622551248, 0, 1000, 1, true, 20000 ether), false);

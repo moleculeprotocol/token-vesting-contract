@@ -20,14 +20,12 @@ contract TokenVestingMerkle is TokenVesting {
         merkleRoot = _root;
     }
 
-    error Unauthorized();
     error InvalidProof();
     error AlreadyClaimed();
 
     /**
      * @notice Claims a vesting schedule from a merkle tree
      * @param _proof merkle proof
-     * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
      * @param _start start time of the vesting period
      * @param _cliff duration in seconds of the cliff in which tokens will begin to vest
      * @param _duration duration in seconds of the period in which the tokens will vest
@@ -37,7 +35,6 @@ contract TokenVestingMerkle is TokenVesting {
      */
     function claimSchedule(
         bytes32[] calldata _proof,
-        address _beneficiary,
         uint256 _start,
         uint256 _cliff,
         uint256 _duration,
@@ -46,14 +43,13 @@ contract TokenVestingMerkle is TokenVesting {
         uint256 _amount
     ) public whenNotPaused nonReentrant {
         bytes32 leaf =
-            keccak256(bytes.concat(keccak256(abi.encode(_beneficiary, _start, _cliff, _duration, _slicePeriodSeconds, _revokable, _amount))));
+            keccak256(bytes.concat(keccak256(abi.encode(_msgSender(), _start, _cliff, _duration, _slicePeriodSeconds, _revokable, _amount))));
 
-        if (_msgSender() != _beneficiary) revert Unauthorized();
         if (!MerkleProofLib.verify(_proof, merkleRoot, leaf)) revert InvalidProof();
         if (claimed[leaf]) revert AlreadyClaimed();
 
         claimed[leaf] = true;
-        _createVestingSchedule(_beneficiary, _start, _cliff, _duration, _slicePeriodSeconds, _revokable, _amount);
+        _createVestingSchedule(_msgSender(), _start, _cliff, _duration, _slicePeriodSeconds, _revokable, _amount);
     }
 
     /**
