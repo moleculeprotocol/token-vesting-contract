@@ -157,7 +157,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @return the vesting id
      */
     function getVestingIdAtIndex(uint256 index) external view returns (bytes32) {
-        require(index < getVestingSchedulesCount(), "TokenVesting: index out of bounds");
+        require(index < vestingSchedulesIds.length, "TokenVesting: index out of bounds");
         return vestingSchedulesIds[index];
     }
 
@@ -359,8 +359,8 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @dev Returns the number of vesting schedules managed by this contract.
      * @return the number of vesting schedules
      */
-    function getVestingSchedulesCount() public view returns (uint256) {
-        return vestingSchedulesIds.length;
+    function getVestingSchedulesIds() public view returns (bytes32[] memory) {
+        return vestingSchedulesIds;
     }
 
     /**

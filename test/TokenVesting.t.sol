@@ -218,7 +218,7 @@ contract TokenVestingTest is Test {
         token.transfer(address(tokenVesting), 1000 ether);
         tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
         tokenVesting.createVestingSchedule(alice, baseTime, 0, duration * 2, 1, true, 50 ether);
-        assertEq(tokenVesting.getVestingSchedulesCount(), 2);
+        assertEq(tokenVesting.getVestingSchedulesIds().length, 2);
         assertEq(tokenVesting.getVestingSchedulesCountByBeneficiary(alice), 2);
         vm.stopPrank();
 
@@ -237,7 +237,7 @@ contract TokenVestingTest is Test {
         token.transfer(address(tokenVesting), 1000 ether);
         tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
         tokenVesting.createVestingSchedule(alice, baseTime, 0, duration * 2, 1, true, 50 ether);
-        assertEq(tokenVesting.getVestingSchedulesCount(), 2);
+        assertEq(tokenVesting.getVestingSchedulesIds().length, 2);
         assertEq(tokenVesting.getVestingSchedulesCountByBeneficiary(alice), 2);
         vm.stopPrank();
 
