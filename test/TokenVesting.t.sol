@@ -40,7 +40,7 @@ contract TokenVestingTest is Test {
         uint256 duration = 1000;
         MockTokenVesting.VestingSchedule memory vestingSchedule;
 
-        assertEq(tokenVesting.getNativeToken(), address(token));
+        assertEq(address(tokenVesting.nativeToken()), address(token));
 
         vm.startPrank(deployer);
         token.transfer(address(tokenVesting), 1000 ether);

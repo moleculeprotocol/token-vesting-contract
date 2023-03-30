@@ -57,7 +57,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     }
 
     // address of the ERC20 native token
-    IERC20Metadata private immutable _nativeToken;
+    IERC20Metadata public immutable nativeToken;
 
     bytes32[] private vestingSchedulesIds;
     mapping(bytes32 => VestingSchedule) private vestingSchedules;
@@ -94,8 +94,8 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      */
     constructor(address token_, string memory _name, string memory _symbol) {
         require(token_ != address(0x0));
-        _nativeToken = IERC20Metadata(token_);
-        require(_nativeToken.decimals() == 18, "TokenVesting: only native tokens with 18 decimals are supported");
+        nativeToken = IERC20Metadata(token_);
+        require(nativeToken.decimals() == 18, "TokenVesting: only native tokens with 18 decimals are supported");
         name = _name;
         symbol = _symbol;
     }
@@ -175,13 +175,6 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      */
     function getVestingSchedulesTotalAmount() external view returns (uint256) {
         return vestingSchedulesTotalAmount;
-    }
-
-    /**
-     * @dev Returns the address of the ERC20 native token managed by the vesting contract.
-     */
-    function getNativeToken() external view returns (address) {
-        return address(_nativeToken);
     }
 
     /**
@@ -302,7 +295,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      */
     function withdraw(uint256 amount) external nonReentrant onlyOwner {
         require(getWithdrawableAmount() >= amount, "TokenVesting: not enough withdrawable funds");
-        _nativeToken.safeTransfer(owner(), amount);
+        nativeToken.safeTransfer(owner(), amount);
     }
 
     /**
@@ -322,7 +315,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount - amount;
         holdersVestedAmount[vestingSchedule.beneficiary] = holdersVestedAmount[vestingSchedule.beneficiary] - amount;
         emit Released(vestingScheduleId, vestingSchedule.beneficiary, amount);
-        _nativeToken.safeTransfer(beneficiaryPayable, amount);
+        nativeToken.safeTransfer(beneficiaryPayable, amount);
     }
 
     /**
@@ -384,7 +377,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @return the amount of tokens
      */
     function getWithdrawableAmount() public view returns (uint256) {
-        return _nativeToken.balanceOf(address(this)) - vestingSchedulesTotalAmount;
+        return nativeToken.balanceOf(address(this)) - vestingSchedulesTotalAmount;
     }
 
     /**
