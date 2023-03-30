@@ -255,39 +255,6 @@ contract TokenVestingTest is Test {
         assertEq(token.balanceOf(address(alice)), 62.5 ether);
     }
 
-    function testBeneficiaryUpdate() public {
-        uint256 baseTime = block.timestamp;
-        uint256 duration = 1000;
-
-        vm.startPrank(deployer);
-        token.transfer(address(tokenVesting), 100 ether);
-        tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
-
-        bytes32 vestingScheduleId = tokenVesting.computeVestingScheduleIdForAddressAndIndex(alice, 0);
-
-        tokenVesting.changeBeneficiary(vestingScheduleId, bob);
-        vm.stopPrank();
-
-        assertEq(tokenVesting.balanceOf(address(alice)), 0);
-        assertEq(tokenVesting.balanceOf(address(bob)), 100 ether);
-
-        // set time to half the vesting period
-        uint256 halfTime = baseTime + duration / 2;
-        vm.warp(halfTime);
-
-        // alice should not be able to release any tokens
-        vm.startPrank(alice);
-        vm.expectRevert("TokenVesting: only beneficiary and owner can release vested tokens");
-        tokenVesting.release(vestingScheduleId, 50 ether);
-        vm.stopPrank();
-
-        // bob as new beneficiary should be able to release tokens
-        vm.startPrank(bob);
-        tokenVesting.release(vestingScheduleId, 50 ether);
-        assertEq(token.balanceOf(address(bob)), 50 ether);
-        vm.stopPrank();
-    }
-
     function testVirtualTokenTotalSupplyAndBalance() public {
         uint256 baseTime = block.timestamp;
         uint256 duration = 1000;

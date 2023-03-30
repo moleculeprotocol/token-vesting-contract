@@ -36,7 +36,6 @@ The beneficiaries can later claim their schedules by providing a Merkle proof of
 Please make sure you validate the different vesting schedule inputs (duration, amount, etc.), before you create your Merkle Tree. Calling `claimSchedule` with invalid inputs will revert and render the vesting schedule unclaimable for the beneficiary.
 
 ### Main changes
-- `changeBeneficiary` function to migrate vesting schedules to a new address
 - `releaseAvailableTokensForHolder` function to release all available tokens for a beneficiary (especially relevant if the beneficiary has multiple vesting schedules)
 - `setPaused` function to globally pause token releases and claiming schedules (the latter only in the case of using `TokenVestingMerkle`). Uses OpenZepplin's `Pausable` contract.
 

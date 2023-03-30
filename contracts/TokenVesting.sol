@@ -254,29 +254,6 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @notice Sets a new beneficiary for the vesting schedule for given identifier.
-     * @param vestingScheduleId the vesting schedule identifier
-     * @param newBeneficiary address of the new beneficiary
-     */
-    function changeBeneficiary(bytes32 vestingScheduleId, address newBeneficiary)
-        external
-        onlyOwner
-        onlyIfVestingScheduleNotRevoked(vestingScheduleId)
-    {
-        require(newBeneficiary != address(0x0), "TokenVesting: new beneficiary must not be the zero address");
-        VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
-        uint256 unreleased = vestingSchedule.amountTotal - vestingSchedule.released;
-
-        // Update the vested token amount for the old beneficiary by subtracting the unreleased amount
-        holdersVestedAmount[vestingSchedule.beneficiary] = holdersVestedAmount[vestingSchedule.beneficiary] - unreleased;
-
-        // Update the vested token amount for  the new beneficiary by adding the unreleased amount
-        holdersVestedAmount[newBeneficiary] = holdersVestedAmount[newBeneficiary] + unreleased;
-
-        vestingSchedules[vestingScheduleId].beneficiary = newBeneficiary;
-    }
-
-    /**
      * @notice Withdraw the specified amount if possible.
      * @param amount the amount to withdraw
      */
