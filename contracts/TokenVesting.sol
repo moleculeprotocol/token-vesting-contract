@@ -269,8 +269,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         bool isBeneficiary = msg.sender == vestingSchedule.beneficiary;
         bool isOwner = msg.sender == owner();
         require(isBeneficiary || isOwner, "TokenVesting: only beneficiary and owner can release vested tokens");
-        uint256 vestedAmount = _computeReleasableAmount(vestingSchedule);
-        require(vestedAmount >= amount, "TokenVesting: cannot release tokens, not enough vested tokens");
+        require(_computeReleasableAmount(vestingSchedule) >= amount, "TokenVesting: cannot release tokens, not enough vested tokens");
         vestingSchedule.released = vestingSchedule.released + amount;
         address beneficiaryPayable = vestingSchedule.beneficiary;
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount - amount;
@@ -369,8 +368,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
             // Disable warning: duration and token amounts are checked in schedule creation and prevent underflow/overflow
             //slither-disable-next-line divide-before-multiply
             uint256 vestedAmount = vestingSchedule.amountTotal * vestedSeconds / vestingSchedule.duration;
-            vestedAmount = vestedAmount - vestingSchedule.released;
-            return vestedAmount;
+            return vestedAmount - vestingSchedule.released;
         }
     }
 }
