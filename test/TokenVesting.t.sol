@@ -5,13 +5,12 @@ import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import { Token } from "../contracts/Token.sol";
-import { MockTokenVesting } from "../contracts/MockTokenVesting.sol";
+import { Token } from "../contracts/test/Token.sol";
 import { TokenVesting } from "../contracts/TokenVesting.sol";
 
 contract TokenVestingTest is Test {
     Token internal token;
-    MockTokenVesting internal tokenVesting;
+    TokenVesting internal tokenVesting;
 
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
@@ -21,7 +20,7 @@ contract TokenVestingTest is Test {
     function setUp() public {
         vm.startPrank(deployer);
         token = new Token("Test Token", "TT", 18, 1000000 ether);
-        tokenVesting = new MockTokenVesting(IERC20Metadata(token), "Virtual Test Token", "vTT");
+        tokenVesting = new TokenVesting(IERC20Metadata(token), "Virtual Test Token", "vTT");
         vm.stopPrank();
     }
 
@@ -37,9 +36,9 @@ contract TokenVestingTest is Test {
     }
 
     function testGradualTokenVesting() public {
-        uint256 baseTime = 1622551248;
+        uint256 baseTime = block.timestamp;
         uint256 duration = 1000;
-        MockTokenVesting.VestingSchedule memory vestingSchedule;
+        TokenVesting.VestingSchedule memory vestingSchedule;
 
         assertEq(address(tokenVesting.nativeToken()), address(token));
 
@@ -60,7 +59,7 @@ contract TokenVestingTest is Test {
 
         // set time to half the vesting period
         uint256 halfTime = baseTime + duration / 2;
-        tokenVesting.setCurrentTime(halfTime);
+        vm.warp(halfTime);
 
         // check that vested amount is half the total amount to vest
         assertEq(tokenVesting.computeReleasableAmount(vestingScheduleId), 50 ether);
@@ -90,7 +89,7 @@ contract TokenVestingTest is Test {
         assertEq(vestingSchedule.released, 10 ether);
 
         // set current time after the end of the vesting period
-        tokenVesting.setCurrentTime(baseTime + duration + 1);
+        vm.warp(baseTime + duration + 1);
 
         // check that the vested amount is 90
         assertEq(tokenVesting.computeReleasableAmount(vestingScheduleId), 90 ether);
@@ -163,7 +162,7 @@ contract TokenVestingTest is Test {
     }
 
     function testRevokeScheduleReleasesVestedTokens() public {
-        uint256 baseTime = 1622551248;
+        uint256 baseTime = block.timestamp;
         uint256 duration = 1000;
 
         vm.startPrank(deployer);
@@ -175,15 +174,15 @@ contract TokenVestingTest is Test {
         bytes32 vestingScheduleId = tokenVesting.computeVestingScheduleIdForAddressAndIndex(alice, 0);
 
         // set time to half the vesting period
-        uint256 halfTime = 1622551248 + 1000 / 2;
-        tokenVesting.setCurrentTime(halfTime);
+        uint256 halfTime = baseTime + duration / 2;
+        vm.warp(halfTime);
 
         assertEq(token.balanceOf(address(alice)), 0 ether);
 
         tokenVesting.revoke(vestingScheduleId);
         assertEq(token.balanceOf(address(alice)), 50 ether);
 
-        MockTokenVesting.VestingSchedule memory vestingSchedule = tokenVesting.getVestingSchedule(vestingScheduleId);
+        TokenVesting.VestingSchedule memory vestingSchedule = tokenVesting.getVestingSchedule(vestingScheduleId);
         assertEq(vestingSchedule.status == TokenVesting.Status.REVOKED, true);
 
         assertEq(tokenVesting.getWithdrawableAmount(), 50 ether);
@@ -212,7 +211,7 @@ contract TokenVestingTest is Test {
     }
 
     function testComputationMultipleForSchedules() public {
-        uint256 baseTime = 1622551248;
+        uint256 baseTime = block.timestamp;
         uint256 duration = 1000;
 
         vm.startPrank(deployer);
@@ -225,13 +224,13 @@ contract TokenVestingTest is Test {
 
         // set time to half the vesting period
         uint256 halfTime = baseTime + duration / 2;
-        tokenVesting.setCurrentTime(halfTime);
+        vm.warp(halfTime);
 
         assertEq(tokenVesting.balanceOf(alice), 150 ether);
     }
 
     function testClaimAvailableTokens() public {
-        uint256 baseTime = 1622551248;
+        uint256 baseTime = block.timestamp;
         uint256 duration = 1000;
 
         vm.startPrank(deployer);
@@ -244,7 +243,7 @@ contract TokenVestingTest is Test {
 
         // set time to half the vesting period
         uint256 halfTime = baseTime + duration / 2;
-        tokenVesting.setCurrentTime(halfTime);
+        vm.warp(halfTime);
 
         assertEq(tokenVesting.balanceOf(alice), 150 ether);
 
@@ -257,7 +256,7 @@ contract TokenVestingTest is Test {
     }
 
     function testBeneficiaryUpdate() public {
-        uint256 baseTime = 1622551248;
+        uint256 baseTime = block.timestamp;
         uint256 duration = 1000;
 
         vm.startPrank(deployer);
@@ -274,7 +273,7 @@ contract TokenVestingTest is Test {
 
         // set time to half the vesting period
         uint256 halfTime = baseTime + duration / 2;
-        tokenVesting.setCurrentTime(halfTime);
+        vm.warp(halfTime);
 
         // alice should not be able to release any tokens
         vm.startPrank(alice);
@@ -290,7 +289,7 @@ contract TokenVestingTest is Test {
     }
 
     function testVirtualTokenTotalSupplyAndBalance() public {
-        uint256 baseTime = 1622551248;
+        uint256 baseTime = block.timestamp;
         uint256 duration = 1000;
 
         // virtual token total supply should be 0 before any vesting schedules are created
@@ -314,7 +313,7 @@ contract TokenVestingTest is Test {
 
         // set time to half the vesting period
         uint256 halfTime = baseTime + duration / 2;
-        tokenVesting.setCurrentTime(halfTime);
+        vm.warp(halfTime);
 
         vm.startPrank(alice);
         tokenVesting.release(vestingScheduleId, 50 ether);
@@ -328,7 +327,7 @@ contract TokenVestingTest is Test {
         assertEq(tokenVesting.balanceOf(address(alice)), 50 ether);
 
         // set time to end of vesting period
-        tokenVesting.setCurrentTime(baseTime + duration + 1);
+        vm.warp(baseTime + duration + 1);
 
         assertEq(tokenVesting.balanceOf(address(alice)), 50 ether);
 
@@ -341,7 +340,7 @@ contract TokenVestingTest is Test {
     }
 
     function testCannotReleaseWhenPaused() public {
-        uint256 baseTime = 1622551248;
+        uint256 baseTime = block.timestamp;
         uint256 duration = 1000;
 
         vm.startPrank(deployer);
@@ -352,7 +351,7 @@ contract TokenVestingTest is Test {
 
         // set time to half the vesting period
         uint256 halfTime = baseTime + duration / 2;
-        tokenVesting.setCurrentTime(halfTime);
+        vm.warp(halfTime);
 
         // pause the contract
         tokenVesting.setPaused(true);
@@ -365,7 +364,7 @@ contract TokenVestingTest is Test {
     }
 
     function testNonTransferability() public {
-        uint256 baseTime = 1622551248;
+        uint256 baseTime = block.timestamp;
         uint256 duration = 1000;
 
         vm.startPrank(deployer);
@@ -375,7 +374,7 @@ contract TokenVestingTest is Test {
 
         // set time to half the vesting period
         uint256 halfTime = baseTime + duration / 2;
-        tokenVesting.setCurrentTime(halfTime);
+        vm.warp(halfTime);
 
         assertEq(tokenVesting.balanceOf(address(alice)), 100 ether);
 
@@ -400,11 +399,11 @@ contract TokenVestingTest is Test {
         vm.assume(amount > 1 ether && amount <= maxTokens);
         vm.assume(duration > 86400 && duration <= maxDuration);
 
-        uint256 baseTime = 1622551248;
+        uint256 baseTime = block.timestamp;
 
         vm.startPrank(deployer);
         Token fuzzToken = new Token("Fuzz Token", "TT", 18, amount);
-        MockTokenVesting fuzzVesting = new MockTokenVesting(IERC20Metadata(fuzzToken), "Fuzz Vesting", "FV");
+        TokenVesting fuzzVesting = new TokenVesting(IERC20Metadata(fuzzToken), "Fuzz Vesting", "FV");
         fuzzToken.transfer(address(fuzzVesting), amount);
         fuzzVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, amount);
         vm.stopPrank();
@@ -413,7 +412,7 @@ contract TokenVestingTest is Test {
 
         // set time to half the vesting period
         uint256 halfTime = baseTime + duration / 2;
-        fuzzVesting.setCurrentTime(halfTime);
+        vm.warp(halfTime);
 
         uint256 releasableAmount = fuzzVesting.computeReleasableAmount(vestingScheduleId);
 
@@ -426,7 +425,7 @@ contract TokenVestingTest is Test {
         vm.startPrank(deployer);
         Token customToken = new Token("6 Decimals Token", "6DT", 6, 100 ether);
         vm.expectRevert(TokenVesting.DecimalsError.selector);
-        new MockTokenVesting(IERC20Metadata(customToken), "Vesting", "v6DT");
+        new TokenVesting(IERC20Metadata(customToken), "Vesting", "v6DT");
         vm.stopPrank();
     }
 }

@@ -405,7 +405,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @return the amount of releasable tokens
      */
     function _computeReleasableAmount(VestingSchedule memory vestingSchedule) internal view returns (uint256) {
-        uint256 currentTime = getCurrentTime();
+        uint256 currentTime = block.timestamp;
         //slither-disable-next-line incorrect-equality
         if ((currentTime < vestingSchedule.cliff) || vestingSchedule.status == Status.REVOKED) {
             return 0;
@@ -424,9 +424,5 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
             vestedAmount = vestedAmount - vestingSchedule.released;
             return vestedAmount;
         }
-    }
-
-    function getCurrentTime() internal view virtual returns (uint256) {
-        return block.timestamp;
     }
 }
