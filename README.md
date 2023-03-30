@@ -35,12 +35,6 @@ The beneficiaries can later claim their schedules by providing a Merkle proof of
 
 Please make sure you validate the different vesting schedule inputs (duration, amount, etc.), before you create your Merkle Tree. Calling `claimSchedule` with invalid inputs will revert and render the vesting schedule unclaimable for the beneficiary.
 
-## 🎭🧑‍💻 Security audits
-
-- [Security audit](https://github.com/abdelhamidbakhta/token-vesting-contracts/blob/main/audits/hacken_audit_report.pdf) from [Hacken](https://hacken.io)
-
-The original contract by [@abdelhamidbakhta](https://github.com/abdelhamidbakhta) was audited in 2021. This version leaves the core logic around creating and managing vesting schedules and the computation untouched (see [diff](https://github.com/schmackofant/token-vesting/compare/1407a87...c2d274d#diff-c1f2ee83cfe329d4820d59fb7e1762e3777d08287ef8766d891323ef98d5b65c)) and merely expands the contract with the virtual token functionality and a few minor changes.
-
 ### Main changes
 - `changeBeneficiary` function to migrate vesting schedules to a new address
 - `releaseAvailableTokensForHolder` function to release all available tokens for a beneficiary (especially relevant if the beneficiary has multiple vesting schedules)
