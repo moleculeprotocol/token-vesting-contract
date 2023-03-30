@@ -390,7 +390,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     function _computeReleasableAmount(VestingSchedule memory vestingSchedule) internal view returns (uint256) {
         uint256 currentTime = block.timestamp;
         //slither-disable-next-line incorrect-equality
-        if ((currentTime < vestingSchedule.cliff) || vestingSchedule.status == Status.REVOKED) {
+        if (currentTime < vestingSchedule.cliff || vestingSchedule.status == Status.REVOKED) {
             return 0;
         } else if (currentTime >= vestingSchedule.start + vestingSchedule.duration) {
             return vestingSchedule.amountTotal - vestingSchedule.released;
