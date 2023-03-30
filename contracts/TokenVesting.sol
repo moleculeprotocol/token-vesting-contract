@@ -228,9 +228,8 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     function revoke(bytes32 vestingScheduleId) external onlyOwner onlyIfVestingScheduleNotRevoked(vestingScheduleId) {
         VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
         require(vestingSchedule.revokable, "TokenVesting: vesting is not revokable");
-        uint256 vestedAmount = _computeReleasableAmount(vestingSchedule);
-        if (vestedAmount > 0) {
-            _release(vestingScheduleId, vestedAmount);
+        if (_computeReleasableAmount(vestingSchedule) > 0) {
+            _release(vestingScheduleId, _computeReleasableAmount(vestingSchedule));
         }
         uint256 unreleased = vestingSchedule.amountTotal - vestingSchedule.released;
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount - unreleased;
