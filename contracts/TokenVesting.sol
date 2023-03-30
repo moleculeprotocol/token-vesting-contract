@@ -97,7 +97,6 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     /// will never be supported.
     error NotSupported();
 
-    error ZeroAddress();
     error DecimalsError();
 
     /**
@@ -107,7 +106,6 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @param _symbol symbol of the virtual token
      */
     constructor(IERC20Metadata token_, string memory _name, string memory _symbol) {
-        if (address(token_) == address(0x0)) revert ZeroAddress();
         nativeToken = IERC20Metadata(token_);
         if (nativeToken.decimals() != 18) revert DecimalsError();
         name = _name;
