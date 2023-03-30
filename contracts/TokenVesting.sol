@@ -106,7 +106,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @param _symbol symbol of the virtual token
      */
     constructor(IERC20Metadata token_, string memory _name, string memory _symbol) {
-        nativeToken = IERC20Metadata(token_);
+        nativeToken = token_;
         if (nativeToken.decimals() != 18) revert DecimalsError();
         name = _name;
         symbol = _symbol;
