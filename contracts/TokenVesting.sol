@@ -315,7 +315,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @notice Returns the array of vesting schedule ids
      * @return vestingSchedulesIds
      */
-    function getVestingSchedulesIds() public view returns (bytes32[] memory) {
+    function getVestingSchedulesIds() external view returns (bytes32[] memory) {
         return vestingSchedulesIds;
     }
 
