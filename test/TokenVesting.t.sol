@@ -200,13 +200,13 @@ contract TokenVestingTest is Test {
         vm.startPrank(deployer);
         token.transfer(address(tokenVesting), 100 ether);
 
-        vm.expectRevert("TokenVesting: duration must not be 0");
+        vm.expectRevert(TokenVesting.InvalidDuration.selector);
         tokenVesting.createVestingSchedule(alice, baseTime, 0, 0, 1, false, 100 ether);
 
-        vm.expectRevert("TokenVesting: slicePeriodSeconds must be >= 1");
+        vm.expectRevert(TokenVesting.InvalidSlicePeriod.selector);
         tokenVesting.createVestingSchedule(alice, baseTime, 0, 1, 0, false, 100 ether);
 
-        vm.expectRevert("TokenVesting: amount must not be 0");
+        vm.expectRevert(TokenVesting.InvalidAmount.selector);
         tokenVesting.createVestingSchedule(alice, baseTime, 0, 1, 1, false, 0);
     }
 

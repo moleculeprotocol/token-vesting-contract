@@ -7,6 +7,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 
 import { Token } from "../contracts/test/Token.sol";
 import { TokenVestingMerkle } from "../contracts/TokenVestingMerkle.sol";
+import { TokenVesting } from "../contracts/TokenVesting.sol";
 
 contract TokenVestingMerkleTest is Test {
     Token internal token;
@@ -80,7 +81,7 @@ contract TokenVestingMerkleTest is Test {
         assertEq(token.balanceOf(address(tokenVesting)), 0);
 
         vm.startPrank(alice);
-        vm.expectRevert("TokenVesting: cannot create vesting schedule because of insufficient tokens in contract");
+        vm.expectRevert(TokenVesting.InsufficientTokensInContract.selector);
         tokenVesting.claimSchedule(aliceProof, 1622551248, 0, 1000, 1, true, 20000 ether);
         vm.stopPrank();
 

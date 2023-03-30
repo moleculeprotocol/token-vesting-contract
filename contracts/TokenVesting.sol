@@ -98,6 +98,11 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     error NotSupported();
 
     error DecimalsError();
+    error InsufficientTokensInContract();
+    error InvalidDuration();
+    error InvalidAmount();
+    error InvalidSlicePeriod();
+    error DurationShorterThanCliff();
 
     /**
      * @notice Creates a vesting contract.
@@ -205,13 +210,14 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         bool _revokable,
         uint256 _amount
     ) internal {
-        require(getWithdrawableAmount() >= _amount, "TokenVesting: cannot create vesting schedule because of insufficient tokens in contract");
-        require(_duration != 0, "TokenVesting: duration must not be 0");
-        require(_amount != 0, "TokenVesting: amount must not be 0");
-        require(_slicePeriodSeconds >= 1, "TokenVesting: slicePeriodSeconds must be >= 1");
-        require(_duration >= _cliff, "TokenVesting: duration must be >= cliff");
-        require(_amount <= 2 ** 200, "TokenVesting: amount must be <= 2 ** 200");
-        require(_duration <= 50 * 365 * 24 * 60 * 60, "TokenVesting: duration must be <= 50 years");
+        if (getWithdrawableAmount() < _amount) revert InsufficientTokensInContract();
+        if (_duration == 0) revert InvalidDuration();
+        if (_amount == 0) revert InvalidAmount();
+        if (_slicePeriodSeconds < 1) revert InvalidSlicePeriod();
+        if (_duration < _cliff) revert DurationShorterThanCliff();
+        if (_amount > 2 ** 200) revert InvalidAmount();
+        if (_duration > 50 * 365 * 24 * 60 * 60) revert InvalidDuration();
+
         bytes32 vestingScheduleId = computeVestingScheduleIdForAddressAndIndex(_beneficiary, holdersVestingScheduleCount[_beneficiary]);
         vestingSchedules[vestingScheduleId] =
             VestingSchedule(_start + _cliff, _start, _duration, _slicePeriodSeconds, _amount, 0, Status.INITIALIZED, _beneficiary, _revokable);
