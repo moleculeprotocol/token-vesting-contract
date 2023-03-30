@@ -211,8 +211,8 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         uint256 _amount
     ) internal {
         require(getWithdrawableAmount() >= _amount, "TokenVesting: cannot create vesting schedule because of insufficient tokens in contract");
-        require(_duration > 0, "TokenVesting: duration must be > 0");
-        require(_amount > 0, "TokenVesting: amount must be > 0");
+        require(_duration != 0, "TokenVesting: duration must not be 0");
+        require(_amount != 0, "TokenVesting: amount must not be 0");
         require(_slicePeriodSeconds >= 1, "TokenVesting: slicePeriodSeconds must be >= 1");
         require(_duration >= _cliff, "TokenVesting: duration must be >= cliff");
         require(_amount <= 2 ** 200, "TokenVesting: amount must be <= 2 ** 200");
