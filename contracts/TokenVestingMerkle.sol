@@ -20,6 +20,10 @@ contract TokenVestingMerkle is TokenVesting {
         merkleRoot = _root;
     }
 
+    error Unauthorized();
+    error InvalidProof();
+    error AlreadyClaimed();
+
     /**
      * @notice Claims a vesting schedule from a merkle tree
      * @param _proof merkle proof
@@ -44,9 +48,9 @@ contract TokenVestingMerkle is TokenVesting {
         bytes32 leaf =
             keccak256(bytes.concat(keccak256(abi.encode(_beneficiary, _start, _cliff, _duration, _slicePeriodSeconds, _revokable, _amount))));
 
-        require(_msgSender() == _beneficiary, "TokenVesting: Only beneficiary can claim");
-        require(MerkleProofLib.verify(_proof, merkleRoot, leaf), "TokenVesting: Invalid proof");
-        require(!claimed[leaf], "TokenVesting: Already claimed");
+        if (_msgSender() != _beneficiary) revert Unauthorized();
+        if (!MerkleProofLib.verify(_proof, merkleRoot, leaf)) revert InvalidProof();
+        if (claimed[leaf]) revert AlreadyClaimed();
 
         claimed[leaf] = true;
         _createVestingSchedule(_beneficiary, _start, _cliff, _duration, _slicePeriodSeconds, _revokable, _amount);

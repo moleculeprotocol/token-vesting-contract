@@ -47,7 +47,7 @@ contract TokenVestingMerkleTest is Test {
 
     function testOnlyBeneficiaryCanClaim() public {
         vm.startPrank(bob);
-        vm.expectRevert("TokenVesting: Only beneficiary can claim");
+        vm.expectRevert(TokenVestingMerkle.Unauthorized.selector);
         tokenVesting.claimSchedule(aliceProof, alice, 1622551248, 0, 1000, 1, true, 20000 ether);
         vm.stopPrank();
 
@@ -57,7 +57,7 @@ contract TokenVestingMerkleTest is Test {
     function testCanOnlyClaimOnce() public {
         vm.startPrank(alice);
         tokenVesting.claimSchedule(aliceProof, alice, 1622551248, 0, 1000, 1, true, 20000 ether);
-        vm.expectRevert("TokenVesting: Already claimed");
+        vm.expectRevert(TokenVestingMerkle.AlreadyClaimed.selector);
         tokenVesting.claimSchedule(aliceProof, alice, 1622551248, 0, 1000, 1, true, 20000 ether);
         vm.stopPrank();
 
@@ -68,13 +68,13 @@ contract TokenVestingMerkleTest is Test {
         vm.startPrank(alice);
 
         // Pass wrong number of tokens
-        vm.expectRevert("TokenVesting: Invalid proof");
+        vm.expectRevert(TokenVestingMerkle.InvalidProof.selector);
         tokenVesting.claimSchedule(aliceProof, alice, 1622551248, 0, 1000, 1, true, 30000 ether);
 
         // Pass invalid proof
         aliceProof[0] = 0xca6d546259ec0929fd20fbc9a057c980806abef37935fb5ca5f6a179718f1481;
 
-        vm.expectRevert("TokenVesting: Invalid proof");
+        vm.expectRevert(TokenVestingMerkle.InvalidProof.selector);
         tokenVesting.claimSchedule(aliceProof, alice, 1622551248, 0, 1000, 1, true, 20000 ether);
         vm.stopPrank();
 
