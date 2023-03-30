@@ -23,11 +23,14 @@ import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
 contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     using SafeERC20 for IERC20Metadata;
 
-    /// @dev The ERC20 name of the virtual token
+    /// @notice The ERC20 name of the virtual token
     string public override name;
-    /// @dev The ERC20 symbol of the virtual token
+
+    /// @notice The ERC20 symbol of the virtual token
     string public override symbol;
-    /// @dev The ERC20 number of decimals of the virtual token (this contract only supports native tokens with 18 decimals)
+
+    /// @notice The ERC20 number of decimals of the virtual token
+    /// @dev This contract only supports native tokens with 18 decimals
     uint8 public constant override decimals = 18;
 
     enum Status {
@@ -35,38 +38,46 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         REVOKED
     }
 
+    /**
+     * @dev vesting schedule struct
+     * @param beneficiary address of beneficiary of the vesting schedule
+     * @param revokable whether or not the vesting is revokable
+     * @param cliff cliff period in seconds
+     * @param start start time of the vesting period
+     * @param duration duration of the vesting period in seconds
+     * @param slicePeriodSeconds duration of a slice period for the vesting in seconds
+     * @param amountTotal total amount of tokens to be released at the end of the vesting
+     * @param released amount of tokens released so far
+     * @param status schedule status (initialized, revoked)
+     */
     struct VestingSchedule {
-        // beneficiary of tokens after they are released
         address beneficiary;
-        // whether or not the vesting is revokable
         bool revokable;
-        // cliff period in seconds
         uint256 cliff;
-        // start time of the vesting period
         uint256 start;
-        // duration of the vesting period in seconds
         uint256 duration;
-        // duration of a slice period for the vesting in seconds
         uint256 slicePeriodSeconds;
-        // total amount of tokens to be released at the end of the vesting
         uint256 amountTotal;
-        // amount of tokens released
         uint256 released;
-        // schedule status (initialized, revoked)
         Status status;
     }
 
-    // address of the ERC20 native token
+    /// @notice address of the ERC20 native token
     IERC20Metadata public immutable nativeToken;
 
+    /// @dev This mapping is used to keep track of the vesting schedule ids
     bytes32[] private vestingSchedulesIds;
+
+    /// @dev This mapping is used to keep track of the vesting schedules
     mapping(bytes32 => VestingSchedule) private vestingSchedules;
+
+    /// @notice total amount of native tokens in all vesting schedules
     uint256 public vestingSchedulesTotalAmount;
 
-    // This mapping is used to keep track of the number of vesting schedules for each beneficiary
+    /// @dev This mapping is used to keep track of the number of vesting schedules for each beneficiary
     mapping(address => uint256) private holdersVestingScheduleCount;
 
-    // This mapping is used to keep track of the total amount of vested tokens for each beneficiary
+    /// @dev This mapping is used to keep track of the total amount of vested tokens for each beneficiary
     mapping(address => uint256) private holdersVestedAmount;
 
     event Released(bytes32 vestingSchedule, address beneficiary, uint256 amount);
@@ -87,7 +98,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     error NotSupported();
 
     /**
-     * @dev Creates a vesting contract.
+     * @notice Creates a vesting contract.
      * @param token_ address of the ERC20 native token contract
      * @param _name name of the virtual token
      * @param _symbol symbol of the virtual token
@@ -132,12 +143,12 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         return 0;
     }
 
-    /// @dev Returns the amount of virtual tokens in existence
+    /// @notice Returns the amount of virtual tokens in existence
     function totalSupply() public view returns (uint256) {
         return vestingSchedulesTotalAmount;
     }
 
-    /// @dev Returns the sum of virtual tokens for a user
+    /// @notice Returns the sum of virtual tokens for a user
     /// @param user The user for whom the balance is calculated
     /// @return Balance of the user
     function balanceOf(address user) public view returns (uint256) {
@@ -145,7 +156,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @dev Returns the number of vesting schedules associated to a beneficiary.
+     * @notice Returns the number of vesting schedules associated to a beneficiary.
      * @return the number of vesting schedules
      */
     function getVestingSchedulesCountByBeneficiary(address _beneficiary) external view returns (uint256) {
@@ -153,7 +164,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @dev Returns the vesting schedule id at the given index.
+     * @notice Returns the vesting schedule id at the given index.
      * @return the vesting id
      */
     function getVestingIdAtIndex(uint256 index) external view returns (bytes32) {
@@ -341,8 +352,8 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @dev Returns the number of vesting schedules managed by this contract.
-     * @return the number of vesting schedules
+     * @notice Returns the array of vesting schedule ids
+     * @return vestingSchedulesIds
      */
     function getVestingSchedulesIds() public view returns (bytes32[] memory) {
         return vestingSchedulesIds;
@@ -365,7 +376,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @dev Returns the amount of native tokens that can be withdrawn by the owner.
+     * @notice Returns the amount of native tokens that can be withdrawn by the owner.
      * @return the amount of tokens
      */
     function getWithdrawableAmount() public view returns (uint256) {
@@ -373,14 +384,14 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     }
 
     /**
-     * @dev Computes the next vesting schedule identifier for a given holder address.
+     * @notice Computes the next vesting schedule identifier for a given holder address.
      */
     function computeNextVestingScheduleIdForHolder(address holder) public view returns (bytes32) {
         return computeVestingScheduleIdForAddressAndIndex(holder, holdersVestingScheduleCount[holder]);
     }
 
     /**
-     * @dev Computes the vesting schedule identifier for an address and an index.
+     * @notice Computes the vesting schedule identifier for an address and an index.
      */
     function computeVestingScheduleIdForAddressAndIndex(address holder, uint256 index) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(holder, index));
