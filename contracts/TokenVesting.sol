@@ -213,9 +213,8 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         require(_amount <= 2 ** 200, "TokenVesting: amount must be <= 2 ** 200");
         require(_duration <= 50 * 365 * 24 * 60 * 60, "TokenVesting: duration must be <= 50 years");
         bytes32 vestingScheduleId = computeNextVestingScheduleIdForHolder(_beneficiary);
-        uint256 cliff = _start + _cliff;
         vestingSchedules[vestingScheduleId] =
-            VestingSchedule(cliff, _start, _duration, _slicePeriodSeconds, _amount, 0, Status.INITIALIZED, _beneficiary, _revokable);
+            VestingSchedule(_start + _cliff, _start, _duration, _slicePeriodSeconds, _amount, 0, Status.INITIALIZED, _beneficiary, _revokable);
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount + _amount;
         vestingSchedulesIds.push(vestingScheduleId);
         uint256 currentVestingCount = holdersVestingScheduleCount[_beneficiary];
