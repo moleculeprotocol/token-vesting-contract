@@ -124,35 +124,35 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     fallback() external payable { }
 
     /// @dev All types of transfers are permanently disabled.
-    function transferFrom(address, address, uint256) public pure returns (bool) {
+    function transferFrom(address, address, uint256) public pure override returns (bool) {
         revert NotSupported();
     }
 
     /// @dev All types of transfers are permanently disabled.
-    function transfer(address, uint256) public pure returns (bool) {
+    function transfer(address, uint256) public pure override returns (bool) {
         revert NotSupported();
     }
 
     /// @dev All types of approvals are permanently disabled to reduce code
     /// size.
-    function approve(address, uint256) public pure returns (bool) {
+    function approve(address, uint256) public pure override returns (bool) {
         revert NotSupported();
     }
 
     /// @dev Approvals cannot be set, so allowances are always zero.
-    function allowance(address, address) public pure returns (uint256) {
+    function allowance(address, address) public pure override returns (uint256) {
         return 0;
     }
 
     /// @notice Returns the amount of virtual tokens in existence
-    function totalSupply() public view returns (uint256) {
+    function totalSupply() public view override returns (uint256) {
         return vestingSchedulesTotalAmount;
     }
 
     /// @notice Returns the sum of virtual tokens for a user
     /// @param user The user for whom the balance is calculated
     /// @return Balance of the user
-    function balanceOf(address user) public view returns (uint256) {
+    function balanceOf(address user) public view override returns (uint256) {
         return holdersVestedAmount[user];
     }
 
