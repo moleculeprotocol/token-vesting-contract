@@ -38,6 +38,8 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     struct VestingSchedule {
         // beneficiary of tokens after they are released
         address beneficiary;
+        // whether or not the vesting is revokable
+        bool revokable;
         // cliff period in seconds
         uint256 cliff;
         // start time of the vesting period
@@ -46,8 +48,6 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         uint256 duration;
         // duration of a slice period for the vesting in seconds
         uint256 slicePeriodSeconds;
-        // whether or not the vesting is revokable
-        bool revokable;
         // total amount of tokens to be released at the end of the vesting
         uint256 amountTotal;
         // amount of tokens released
@@ -220,7 +220,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         bytes32 vestingScheduleId = computeNextVestingScheduleIdForHolder(_beneficiary);
         uint256 cliff = _start + _cliff;
         vestingSchedules[vestingScheduleId] =
-            VestingSchedule(_beneficiary, cliff, _start, _duration, _slicePeriodSeconds, _revokable, _amount, 0, Status.INITIALIZED);
+            VestingSchedule(_beneficiary, _revokable, cliff, _start, _duration, _slicePeriodSeconds, _amount, 0, Status.INITIALIZED);
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount + _amount;
         vestingSchedulesIds.push(vestingScheduleId);
         uint256 currentVestingCount = holdersVestingScheduleCount[_beneficiary];
