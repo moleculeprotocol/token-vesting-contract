@@ -29,6 +29,12 @@ contract TokenVestingTest is Test {
         assertEq(token.balanceOf(deployer), 1000000 ether);
     }
 
+    function testVirtualTokenMeta() public {
+        assertEq(tokenVesting.name(), "Virtual Test Token");
+        assertEq(tokenVesting.symbol(), "vTT");
+        assertEq(tokenVesting.decimals(), 18);
+    }
+
     function testGradualTokenVesting() public {
         uint256 baseTime = 1622551248;
         uint256 duration = 1000;

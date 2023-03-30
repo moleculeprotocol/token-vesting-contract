@@ -2,15 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.18;
 
-import { IERC20 } from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
-
-abstract contract IERC20Extended is IERC20 {
-    function decimals() public virtual returns (uint8);
-}
 
 /// @title TokenVesting - On-Chain vesting scheme enabled by smart contracts.
 /// The TokenVesting contract can release its token balance gradually like a
@@ -24,15 +20,15 @@ abstract contract IERC20Extended is IERC20 {
 /// and was extended with the virtual token functionality and partially rewritten.
 /// @author Schmackofant - schmackofant@protonmail.com
 
-contract TokenVesting is IERC20, Ownable, ReentrancyGuard, Pausable {
-    using SafeERC20 for IERC20Extended;
+contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
+    using SafeERC20 for IERC20Metadata;
 
     /// @dev The ERC20 name of the virtual token
-    string public name;
+    string public override name;
     /// @dev The ERC20 symbol of the virtual token
-    string public symbol;
+    string public override symbol;
     /// @dev The ERC20 number of decimals of the virtual token (this contract only supports native tokens with 18 decimals)
-    uint8 public constant decimals = 18;
+    uint8 public constant override decimals = 18;
 
     enum Status {
         INITIALIZED, //0
@@ -61,7 +57,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard, Pausable {
     }
 
     // address of the ERC20 native token
-    IERC20Extended private immutable _nativeToken;
+    IERC20Metadata private immutable _nativeToken;
 
     bytes32[] private vestingSchedulesIds;
     mapping(bytes32 => VestingSchedule) private vestingSchedules;
@@ -98,7 +94,7 @@ contract TokenVesting is IERC20, Ownable, ReentrancyGuard, Pausable {
      */
     constructor(address token_, string memory _name, string memory _symbol) {
         require(token_ != address(0x0));
-        _nativeToken = IERC20Extended(token_);
+        _nativeToken = IERC20Metadata(token_);
         require(_nativeToken.decimals() == 18, "TokenVesting: only native tokens with 18 decimals are supported");
         name = _name;
         symbol = _symbol;
