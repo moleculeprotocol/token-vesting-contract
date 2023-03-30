@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.18;
 
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { TokenVesting } from "./TokenVesting.sol";
 import { MerkleProofLib } from "solady/utils/MerkleProofLib.sol";
 
@@ -15,7 +16,7 @@ contract TokenVestingMerkle is TokenVesting {
     /// @dev Mapping for already used merkle leaves
     mapping(bytes32 => bool) private claimed;
 
-    constructor(address token_, string memory _name, string memory _symbol, bytes32 _root) TokenVesting(token_, _name, _symbol) {
+    constructor(IERC20Metadata token_, string memory _name, string memory _symbol, bytes32 _root) TokenVesting(token_, _name, _symbol) {
         merkleRoot = _root;
     }
 

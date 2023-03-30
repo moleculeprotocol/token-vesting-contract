@@ -92,8 +92,8 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @param _name name of the virtual token
      * @param _symbol symbol of the virtual token
      */
-    constructor(address token_, string memory _name, string memory _symbol) {
-        require(token_ != address(0x0));
+    constructor(IERC20Metadata token_, string memory _name, string memory _symbol) {
+        require(address(token_) != address(0x0));
         nativeToken = IERC20Metadata(token_);
         require(nativeToken.decimals() == 18, "TokenVesting: only native tokens with 18 decimals are supported");
         name = _name;

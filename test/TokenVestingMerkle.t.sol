@@ -3,6 +3,7 @@ pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { Token } from "../contracts/Token.sol";
 import { TokenVestingMerkle } from "../contracts/TokenVestingMerkle.sol";
@@ -27,7 +28,7 @@ contract TokenVestingMerkleTest is Test {
 
         // Iniate TokenVestingMerkle with the merkle root from the example MerkleTree `samples/merkleTree.json`
         tokenVesting =
-            new TokenVestingMerkle(address(token), "Virtual Test Token", "vTT", 0x8467a730f851f6c56a81c7e4100d38c2c5ae1ce0362e89428bbd51f97eff9635);
+        new TokenVestingMerkle(IERC20Metadata(token), "Virtual Test Token", "vTT", 0x8467a730f851f6c56a81c7e4100d38c2c5ae1ce0362e89428bbd51f97eff9635);
 
         token.transfer(address(tokenVesting), 1000000 ether);
         vm.stopPrank();

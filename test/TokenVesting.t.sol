@@ -3,6 +3,7 @@ pragma solidity ^0.8.18;
 
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
+import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
 import { Token } from "../contracts/Token.sol";
 import { MockTokenVesting } from "../contracts/MockTokenVesting.sol";
@@ -20,7 +21,7 @@ contract TokenVestingTest is Test {
     function setUp() public {
         vm.startPrank(deployer);
         token = new Token("Test Token", "TT", 18, 1000000 ether);
-        tokenVesting = new MockTokenVesting(address(token), "Virtual Test Token", "vTT");
+        tokenVesting = new MockTokenVesting(IERC20Metadata(token), "Virtual Test Token", "vTT");
         vm.stopPrank();
     }
 
@@ -403,7 +404,7 @@ contract TokenVestingTest is Test {
 
         vm.startPrank(deployer);
         Token fuzzToken = new Token("Fuzz Token", "TT", 18, amount);
-        MockTokenVesting fuzzVesting = new MockTokenVesting(address(fuzzToken), "Fuzz Vesting", "FV");
+        MockTokenVesting fuzzVesting = new MockTokenVesting(IERC20Metadata(fuzzToken), "Fuzz Vesting", "FV");
         fuzzToken.transfer(address(fuzzVesting), amount);
         fuzzVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, amount);
         vm.stopPrank();
@@ -425,7 +426,7 @@ contract TokenVestingTest is Test {
         vm.startPrank(deployer);
         Token customToken = new Token("6 Decimals Token", "6DT", 6, 100 ether);
         vm.expectRevert("TokenVesting: only native tokens with 18 decimals are supported");
-        new MockTokenVesting(address(customToken), "Vesting", "v6DT");
+        new MockTokenVesting(IERC20Metadata(customToken), "Vesting", "v6DT");
         vm.stopPrank();
     }
 }
