@@ -10,7 +10,9 @@ import { TokenVesting } from "../contracts/TokenVesting.sol";
 
 contract TokenVestingTest is Test {
     Token internal token;
+    Token internal wrongToken;
     TokenVesting internal tokenVesting;
+    TokenVesting internal tokenVesting2;
 
     address alice = makeAddr("alice");
     address bob = makeAddr("bob");
@@ -20,6 +22,7 @@ contract TokenVestingTest is Test {
     function setUp() public {
         vm.startPrank(deployer);
         token = new Token("Test Token", "TT", 18, 1000000 ether);
+        wrongToken = new Token("Wrong Token", "TT", 6, 1000000 ether);
         tokenVesting = new TokenVesting(IERC20Metadata(token), "Virtual Test Token", "vTT");
         vm.stopPrank();
     }
@@ -27,6 +30,13 @@ contract TokenVestingTest is Test {
     function testTokenSupply() public {
         assertEq(token.totalSupply(), 1000000 ether);
         assertEq(token.balanceOf(deployer), 1000000 ether);
+    }
+
+    function testWrongToken() public {
+        vm.startPrank(deployer);
+        vm.expectRevert(TokenVesting.DecimalsError.selector);
+        tokenVesting2 = new TokenVesting(IERC20Metadata(wrongToken), "Virtual Test Token", "vTT");
+        vm.stopPrank();
     }
 
     function testVirtualTokenMeta() public {
@@ -148,6 +158,21 @@ contract TokenVestingTest is Test {
         vm.stopPrank();
     }
 
+    function testCanOnlyBeRevokedIfRevokable() public {
+        uint256 baseTime = 1622551248;
+        uint256 duration = 1000;
+
+        vm.startPrank(deployer);
+        token.transfer(address(tokenVesting), 100 ether);
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, false, 100 ether);
+
+        bytes32 vestingScheduleId = tokenVesting.computeVestingScheduleIdForAddressAndIndex(alice, 0);
+
+        vm.expectRevert(TokenVesting.NotRevokable.selector);
+        tokenVesting.revoke(vestingScheduleId);
+        vm.stopPrank();
+    }
+
     function testNonOwnerCannotCreateSchedule() public {
         uint256 baseTime = 1622551248;
         uint256 duration = 1000;
@@ -186,6 +211,13 @@ contract TokenVestingTest is Test {
         assertEq(vestingSchedule.status == TokenVesting.Status.REVOKED, true);
 
         assertEq(tokenVesting.getWithdrawableAmount(), 50 ether);
+
+        // Cannot withdraw more than available
+        vm.expectRevert(TokenVesting.InsufficientTokensInContract.selector);
+        tokenVesting.withdraw(51 ether);
+
+        tokenVesting.withdraw(50 ether);
+        assertEq(tokenVesting.getWithdrawableAmount(), 0);
     }
 
     function testScheduleIndexComputation() public {
@@ -208,6 +240,9 @@ contract TokenVestingTest is Test {
 
         vm.expectRevert(TokenVesting.InvalidAmount.selector);
         tokenVesting.createVestingSchedule(alice, baseTime, 0, 1, 1, false, 0);
+
+        vm.expectRevert(TokenVesting.DurationShorterThanCliff.selector);
+        tokenVesting.createVestingSchedule(alice, baseTime, 101, 100, 1, false, 100 ether);
     }
 
     function testComputationMultipleForSchedules() public {
