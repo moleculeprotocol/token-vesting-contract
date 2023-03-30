@@ -40,8 +40,6 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
 
     /**
      * @dev vesting schedule struct
-     * @param beneficiary address of beneficiary of the vesting schedule
-     * @param revokable whether or not the vesting is revokable
      * @param cliff cliff period in seconds
      * @param start start time of the vesting period
      * @param duration duration of the vesting period in seconds
@@ -49,10 +47,10 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @param amountTotal total amount of tokens to be released at the end of the vesting
      * @param released amount of tokens released so far
      * @param status schedule status (initialized, revoked)
+     * @param beneficiary address of beneficiary of the vesting schedule
+     * @param revokable whether or not the vesting is revokable
      */
     struct VestingSchedule {
-        address beneficiary;
-        bool revokable;
         uint256 cliff;
         uint256 start;
         uint256 duration;
@@ -60,6 +58,8 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         uint256 amountTotal;
         uint256 released;
         Status status;
+        address beneficiary;
+        bool revokable;
     }
 
     /// @notice address of the ERC20 native token
@@ -215,7 +215,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         bytes32 vestingScheduleId = computeNextVestingScheduleIdForHolder(_beneficiary);
         uint256 cliff = _start + _cliff;
         vestingSchedules[vestingScheduleId] =
-            VestingSchedule(_beneficiary, _revokable, cliff, _start, _duration, _slicePeriodSeconds, _amount, 0, Status.INITIALIZED);
+            VestingSchedule(cliff, _start, _duration, _slicePeriodSeconds, _amount, 0, Status.INITIALIZED, _beneficiary, _revokable);
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount + _amount;
         vestingSchedulesIds.push(vestingScheduleId);
         uint256 currentVestingCount = holdersVestingScheduleCount[_beneficiary];
