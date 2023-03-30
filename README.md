@@ -40,6 +40,9 @@ Please make sure you validate the different vesting schedule inputs (duration, a
 - `setPaused` function to globally pause token releases and claiming schedules (the latter only in the case of using `TokenVestingMerkle`). Uses OpenZepplin's `Pausable` contract. The main use case for this is a) as a safety measure in case of an emergency and b) to launch the contract in a paused state and unpause it once the DAO or organization has launched and everything is ready for people to start releasing their tokens.
 
 ## ⚠️ Important notes and caveats
+Please read the following notes carefully before using this contract. They are important to understand the limitations of this contract and how to use it properly.
+
+- In general the DAO or organization deploying this contract has to do the due diligence on the native token they want to use. This contract only supports standard ERC20 implementations. If the native token is not a standard ERC20 implementation (e.g. restricting or modifying transfer functions, being a rebase token, etc.), the contract might not work as expected and it is strongly recommended to not use this contract with such a token.
 - This contract is only compatible with native tokens that have 18 decimals. Deyploment will revert otherwise.
 - You should never use this contract with a native token that is rebasing down as this could lead to calculation errors. For example, if the `TokenVesting` smart contract's token balance decreases due to rebasing, the beneficiary might be able to release fewer tokens than anticipated. This occurs when the contract's token balance becomes smaller than the total amount specified in the vesting schedule.
 - The contract is tested with and allows a schedule duration `<= 50 years` and a token amount `<= 2^200` (approx. 1.6 Tredecillion tokens). If your requirements are more extreme than that, you should probably not use this contract and instead implement a custom solution.
