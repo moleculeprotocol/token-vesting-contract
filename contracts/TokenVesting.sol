@@ -216,7 +216,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         if (getWithdrawableAmount() < _amount) revert InsufficientTokensInContract();
         if (_duration == 0) revert InvalidDuration();
         if (_amount == 0) revert InvalidAmount();
-        if (_slicePeriodSeconds < 1) revert InvalidSlicePeriod();
+        if (_slicePeriodSeconds == 0) revert InvalidSlicePeriod();
         if (_duration < _cliff) revert DurationShorterThanCliff();
         if (_amount > 2 ** 200) revert InvalidAmount();
         if (_duration > 50 * 365 * 24 * 60 * 60) revert InvalidDuration();
@@ -280,11 +280,10 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         if (!isBeneficiary && !isOwner) revert Unauthorized();
         if (amount > _computeReleasableAmount(vestingSchedule)) revert InsufficientReleasableTokens();
         vestingSchedule.released = vestingSchedule.released + amount;
-        address beneficiaryPayable = vestingSchedule.beneficiary;
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount - amount;
         holdersVestedAmount[vestingSchedule.beneficiary] = holdersVestedAmount[vestingSchedule.beneficiary] - amount;
         emit Released(vestingScheduleId, vestingSchedule.beneficiary, amount);
-        nativeToken.safeTransfer(beneficiaryPayable, amount);
+        nativeToken.safeTransfer(vestingSchedule.beneficiary, amount);
     }
 
     /**
