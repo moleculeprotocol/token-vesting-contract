@@ -88,7 +88,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      */
     modifier onlyIfVestingScheduleNotRevoked(bytes32 vestingScheduleId) {
         //slither-disable-next-line incorrect-equality
-        require(vestingSchedules[vestingScheduleId].status == Status.INITIALIZED);
+        if (vestingSchedules[vestingScheduleId].status == Status.REVOKED) revert ScheduleRevoked();
         _;
     }
 
@@ -106,6 +106,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     error DurationShorterThanCliff();
     error NotRevokable();
     error Unauthorized();
+    error ScheduleRevoked();
 
     /**
      * @notice Creates a vesting contract.
