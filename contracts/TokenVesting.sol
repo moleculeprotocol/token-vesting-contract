@@ -226,7 +226,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
             VestingSchedule(_start + _cliff, _start, _duration, _slicePeriodSeconds, _amount, 0, Status.INITIALIZED, _beneficiary, _revokable);
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount + _amount;
         vestingSchedulesIds.push(vestingScheduleId);
-        holdersVestingScheduleCount[_beneficiary] = holdersVestingScheduleCount[_beneficiary] + 1;
+        ++holdersVestingScheduleCount[_beneficiary];
         holdersVestedAmount[_beneficiary] = holdersVestedAmount[_beneficiary] + _amount;
     }
 
