@@ -219,7 +219,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         if (_slicePeriodSeconds == 0) revert InvalidSlicePeriod();
         if (_duration < _cliff) revert DurationShorterThanCliff();
         if (_amount > 2 ** 200) revert InvalidAmount();
-        if (_duration > 50 * 365 * 24 * 60 * 60) revert InvalidDuration();
+        if (_duration > 50 * (365 days)) revert InvalidDuration();
 
         bytes32 vestingScheduleId = computeVestingScheduleIdForAddressAndIndex(_beneficiary, holdersVestingScheduleCount[_beneficiary]);
         vestingSchedules[vestingScheduleId] =

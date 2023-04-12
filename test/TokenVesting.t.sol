@@ -422,7 +422,7 @@ contract TokenVestingTest is Test {
         // Assuming 1.6 Tredecillion tokens is enough for everyone
         uint256 maxTokens = 2 ** 200;
         // schedule duration between 1 day and 50 years
-        uint256 maxDuration = 50 * 365 * 24 * 60 * 60;
+        uint256 maxDuration = 50 * (365 days);
 
         vm.assume(amount > 1 ether && amount <= maxTokens);
         vm.assume(duration > 86400 && duration <= maxDuration);
