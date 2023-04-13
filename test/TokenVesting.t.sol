@@ -367,30 +367,6 @@ contract TokenVestingTest is Test {
         assertEq(tokenVesting.balanceOf(address(alice)), 0);
     }
 
-    function testCannotReleaseWhenPaused() public {
-        uint256 baseTime = block.timestamp;
-        uint256 duration = 1000;
-
-        vm.startPrank(deployer);
-        token.transfer(address(tokenVesting), 100 ether);
-        tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
-
-        bytes32 vestingScheduleId = tokenVesting.computeVestingScheduleIdForAddressAndIndex(alice, 0);
-
-        // set time to half the vesting period
-        uint256 halfTime = baseTime + duration / 2;
-        vm.warp(halfTime);
-
-        // pause the contract
-        tokenVesting.setPaused(true);
-        vm.stopPrank();
-
-        vm.startPrank(alice);
-        vm.expectRevert("Pausable: paused");
-        tokenVesting.release(vestingScheduleId, 50 ether);
-        vm.stopPrank();
-    }
-
     function testNonTransferability() public {
         uint256 baseTime = block.timestamp;
         uint256 duration = 1000;

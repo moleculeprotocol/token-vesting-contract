@@ -263,7 +263,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @param vestingScheduleId the vesting schedule identifier
      * @param amount the amount to release
      */
-    function _release(bytes32 vestingScheduleId, uint256 amount) internal whenNotPaused {
+    function _release(bytes32 vestingScheduleId, uint256 amount) internal {
         VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
         bool isBeneficiary = msg.sender == vestingSchedule.beneficiary;
         bool isOwner = msg.sender == owner();
@@ -281,12 +281,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @param vestingScheduleId the vesting schedule identifier
      * @param amount the amount to release
      */
-    function release(bytes32 vestingScheduleId, uint256 amount)
-        external
-        whenNotPaused
-        nonReentrant
-        onlyIfVestingScheduleNotRevoked(vestingScheduleId)
-    {
+    function release(bytes32 vestingScheduleId, uint256 amount) external nonReentrant onlyIfVestingScheduleNotRevoked(vestingScheduleId) {
         _release(vestingScheduleId, amount);
     }
 
@@ -294,7 +289,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @notice Release all available tokens for holder address
      * @param holder address of the holder & beneficiary
      */
-    function releaseAvailableTokensForHolder(address holder) external whenNotPaused nonReentrant {
+    function releaseAvailableTokensForHolder(address holder) external nonReentrant {
         if (msg.sender != holder && msg.sender != owner()) revert Unauthorized();
         uint256 vestingScheduleCount = holdersVestingScheduleCount[holder];
         for (uint256 i = 0; i < vestingScheduleCount; i++) {
