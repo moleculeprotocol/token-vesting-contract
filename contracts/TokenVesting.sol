@@ -107,6 +107,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     error NotRevokable();
     error Unauthorized();
     error ScheduleRevoked();
+    error TooManySchedulesForBeneficiary();
 
     /**
      * @notice Creates a vesting contract.
@@ -210,6 +211,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         if (_duration < _cliff) revert DurationShorterThanCliff();
         if (_amount > 2 ** 200) revert InvalidAmount();
         if (_duration > 50 * (365 days)) revert InvalidDuration();
+        if (holdersVestingScheduleCount[_beneficiary] >= 100) revert TooManySchedulesForBeneficiary();
 
         bytes32 vestingScheduleId = computeVestingScheduleIdForAddressAndIndex(_beneficiary, holdersVestingScheduleCount[_beneficiary]);
         vestingSchedules[vestingScheduleId] =
