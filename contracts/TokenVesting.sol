@@ -87,6 +87,8 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @dev Reverts if the vesting schedule does not exist or has been revoked.
      */
     modifier onlyIfVestingScheduleNotRevoked(bytes32 vestingScheduleId) {
+        // Check if schedule exists
+        if (vestingSchedules[vestingScheduleId].duration == 0) revert InvalidSchedule();
         //slither-disable-next-line incorrect-equality
         if (vestingSchedules[vestingScheduleId].status == Status.REVOKED) revert ScheduleRevoked();
         _;
@@ -100,6 +102,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     error DecimalsError();
     error InsufficientTokensInContract();
     error InsufficientReleasableTokens();
+    error InvalidSchedule();
     error InvalidDuration();
     error InvalidAmount();
     error InvalidSlicePeriod();
