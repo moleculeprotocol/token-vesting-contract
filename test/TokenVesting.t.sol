@@ -47,7 +47,7 @@ contract TokenVestingTest is Test {
 
     function testGradualTokenVesting() public {
         uint256 baseTime = block.timestamp;
-        uint256 duration = 1000;
+        uint256 duration = 4 weeks;
         TokenVesting.VestingSchedule memory vestingSchedule;
 
         assertEq(address(tokenVesting.nativeToken()), address(token));
@@ -142,8 +142,8 @@ contract TokenVestingTest is Test {
     }
 
     function testNonOwnerCannotRevokeSchedule() public {
-        uint256 baseTime = 1622551248;
-        uint256 duration = 1000;
+        uint256 baseTime = block.timestamp + 1 weeks;
+        uint256 duration = 4 weeks;
 
         vm.startPrank(deployer);
         token.transfer(address(tokenVesting), 100 ether);
@@ -159,8 +159,8 @@ contract TokenVestingTest is Test {
     }
 
     function testCanOnlyBeRevokedIfRevokable() public {
-        uint256 baseTime = 1622551248;
-        uint256 duration = 1000;
+        uint256 baseTime = block.timestamp + 1 weeks;
+        uint256 duration = 4 weeks;
 
         vm.startPrank(deployer);
         token.transfer(address(tokenVesting), 100 ether);
@@ -174,8 +174,8 @@ contract TokenVestingTest is Test {
     }
 
     function testNonOwnerCannotCreateSchedule() public {
-        uint256 baseTime = 1622551248;
-        uint256 duration = 1000;
+        uint256 baseTime = block.timestamp + 1 weeks;
+        uint256 duration = 4 weeks;
 
         vm.startPrank(deployer);
         token.transfer(address(tokenVesting), 100 ether);
@@ -188,7 +188,7 @@ contract TokenVestingTest is Test {
 
     function testRevokeScheduleReleasesVestedTokens() public {
         uint256 baseTime = block.timestamp;
-        uint256 duration = 1000;
+        uint256 duration = 4 weeks;
 
         vm.startPrank(deployer);
         token.transfer(address(tokenVesting), 100 ether);
@@ -227,7 +227,8 @@ contract TokenVestingTest is Test {
     }
 
     function testTextInputParameterChecks() public {
-        uint256 baseTime = 1622551248;
+        uint256 baseTime = block.timestamp + 1 weeks;
+        uint256 duration = 4 weeks;
 
         vm.startPrank(deployer);
         token.transfer(address(tokenVesting), 100 ether);
@@ -236,18 +237,18 @@ contract TokenVestingTest is Test {
         tokenVesting.createVestingSchedule(alice, baseTime, 0, 0, 1, false, 100 ether);
 
         vm.expectRevert(TokenVesting.InvalidSlicePeriod.selector);
-        tokenVesting.createVestingSchedule(alice, baseTime, 0, 1, 0, false, 100 ether);
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 0, false, 100 ether);
 
         vm.expectRevert(TokenVesting.InvalidAmount.selector);
-        tokenVesting.createVestingSchedule(alice, baseTime, 0, 1, 1, false, 0);
+        tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, false, 0);
 
         vm.expectRevert(TokenVesting.DurationShorterThanCliff.selector);
-        tokenVesting.createVestingSchedule(alice, baseTime, 101, 100, 1, false, 100 ether);
+        tokenVesting.createVestingSchedule(alice, baseTime, 5 weeks, duration, 1, false, 100 ether);
     }
 
     function testComputationMultipleForSchedules() public {
         uint256 baseTime = block.timestamp;
-        uint256 duration = 1000;
+        uint256 duration = 4 weeks;
 
         vm.startPrank(deployer);
         token.transfer(address(tokenVesting), 1000 ether);
@@ -266,7 +267,7 @@ contract TokenVestingTest is Test {
 
     function testClaimAvailableTokens() public {
         uint256 baseTime = block.timestamp;
-        uint256 duration = 1000;
+        uint256 duration = 4 weeks;
 
         vm.startPrank(deployer);
         token.transfer(address(tokenVesting), 1000 ether);
@@ -292,7 +293,7 @@ contract TokenVestingTest is Test {
 
     function testCannotClaimMoreThanAvailable() public {
         uint256 baseTime = block.timestamp;
-        uint256 duration = 1000;
+        uint256 duration = 4 weeks;
 
         vm.startPrank(deployer);
         token.transfer(address(tokenVesting), 1000 ether);
@@ -318,7 +319,7 @@ contract TokenVestingTest is Test {
 
     function testVirtualTokenTotalSupplyAndBalance() public {
         uint256 baseTime = block.timestamp;
-        uint256 duration = 1000;
+        uint256 duration = 4 weeks;
 
         // virtual token total supply should be 0 before any vesting schedules are created
         assertEq(tokenVesting.totalSupply(), 0);
@@ -369,7 +370,7 @@ contract TokenVestingTest is Test {
 
     function testNonTransferability() public {
         uint256 baseTime = block.timestamp;
-        uint256 duration = 1000;
+        uint256 duration = 4 weeks;
 
         vm.startPrank(deployer);
         token.transfer(address(tokenVesting), 100 ether);
@@ -400,8 +401,8 @@ contract TokenVestingTest is Test {
         // schedule duration between 1 day and 50 years
         uint256 maxDuration = 50 * (365 days);
 
-        vm.assume(amount > 1 ether && amount <= maxTokens);
-        vm.assume(duration > 86400 && duration <= maxDuration);
+        vm.assume(amount > 0 ether && amount <= maxTokens);
+        vm.assume(duration > 1 weeks && duration <= maxDuration);
 
         uint256 baseTime = block.timestamp;
 

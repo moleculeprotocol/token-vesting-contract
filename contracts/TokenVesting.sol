@@ -106,6 +106,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     error InvalidDuration();
     error InvalidAmount();
     error InvalidSlicePeriod();
+    error InvalidStart();
     error DurationShorterThanCliff();
     error NotRevokable();
     error Unauthorized();
@@ -208,10 +209,21 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         uint256 _amount
     ) internal {
         if (getWithdrawableAmount() < _amount) revert InsufficientTokensInContract();
-        if (_duration == 0) revert InvalidDuration();
+
+        // _start should be no further away than 30 weeks
+        if (_start > block.timestamp + 30 weeks) revert InvalidStart();
+
+        // _duration should be at least 7 days
+        if (_duration < 7 days) revert InvalidDuration();
+
         if (_amount == 0) revert InvalidAmount();
-        if (_slicePeriodSeconds == 0) revert InvalidSlicePeriod();
+
+        // _slicePeriodSeconds should be at least 60 seconds
+        if (_slicePeriodSeconds == 0 || _slicePeriodSeconds > 60) revert InvalidSlicePeriod();
+
+        // _duration must be longer than _cliff
         if (_duration < _cliff) revert DurationShorterThanCliff();
+
         if (_amount > 2 ** 200) revert InvalidAmount();
         if (_duration > 50 * (365 days)) revert InvalidDuration();
         if (holdersVestingScheduleCount[_beneficiary] >= 100) revert TooManySchedulesForBeneficiary();
