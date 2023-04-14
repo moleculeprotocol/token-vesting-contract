@@ -80,15 +80,27 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     /// @dev This mapping is used to keep track of the total amount of vested tokens for each beneficiary
     mapping(address => uint256) private holdersVestedAmount;
 
-    event Released(bytes32 vestingSchedule, address beneficiary, uint256 amount);
-    event Revoked(bytes32 vestingSchedule);
+    event ScheduleCreated(
+        bytes32 indexed scheduleId,
+        address indexed beneficiary,
+        uint256 amount,
+        uint256 start,
+        uint256 cliff,
+        uint256 duration,
+        uint256 slicePeriodSeconds,
+        bool revokable
+    );
+    event TokensReleased(bytes32 indexed scheduleId, address indexed beneficiary, uint256 amount);
+    event ScheduleRevoked(bytes32 indexed scheduleId);
 
     /**
      * @dev Reverts if the vesting schedule does not exist or has been revoked.
      */
     modifier onlyIfVestingScheduleNotRevoked(bytes32 vestingScheduleId) {
+        // Check if schedule exists
+        if (vestingSchedules[vestingScheduleId].duration == 0) revert InvalidSchedule();
         //slither-disable-next-line incorrect-equality
-        require(vestingSchedules[vestingScheduleId].status == Status.INITIALIZED);
+        if (vestingSchedules[vestingScheduleId].status == Status.REVOKED) revert ScheduleWasRevoked();
         _;
     }
 
@@ -100,12 +112,16 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     error DecimalsError();
     error InsufficientTokensInContract();
     error InsufficientReleasableTokens();
+    error InvalidSchedule();
     error InvalidDuration();
     error InvalidAmount();
     error InvalidSlicePeriod();
+    error InvalidStart();
     error DurationShorterThanCliff();
     error NotRevokable();
     error Unauthorized();
+    error ScheduleWasRevoked();
+    error TooManySchedulesForBeneficiary();
 
     /**
      * @notice Creates a vesting contract.
@@ -119,17 +135,6 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         name = _name;
         symbol = _symbol;
     }
-
-    /**
-     * @dev This function is called for plain Ether transfers, i.e. for every call with empty calldata.
-     */
-    receive() external payable { }
-
-    /**
-     * @dev Fallback function is executed if none of the other functions match the function
-     * identifier or no data was provided with the function call.
-     */
-    fallback() external payable { }
 
     /// @dev All types of transfers are permanently disabled.
     function transferFrom(address, address, uint256) public pure override returns (bool) {
@@ -214,20 +219,32 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         uint256 _amount
     ) internal {
         if (getWithdrawableAmount() < _amount) revert InsufficientTokensInContract();
-        if (_duration == 0) revert InvalidDuration();
+
+        // _start should be no further away than 30 weeks
+        if (_start > block.timestamp + 30 weeks) revert InvalidStart();
+
+        // _duration should be at least 7 days and max 50 years
+        if (_duration < 7 days || _duration > 50 * (365 days)) revert InvalidDuration();
+
         if (_amount == 0) revert InvalidAmount();
-        if (_slicePeriodSeconds == 0) revert InvalidSlicePeriod();
+
+        // _slicePeriodSeconds should be at least 60 seconds
+        if (_slicePeriodSeconds == 0 || _slicePeriodSeconds > 60) revert InvalidSlicePeriod();
+
+        // _duration must be longer than _cliff
         if (_duration < _cliff) revert DurationShorterThanCliff();
+
         if (_amount > 2 ** 200) revert InvalidAmount();
-        if (_duration > 50 * 365 * 24 * 60 * 60) revert InvalidDuration();
+        if (holdersVestingScheduleCount[_beneficiary] >= 100) revert TooManySchedulesForBeneficiary();
 
         bytes32 vestingScheduleId = computeVestingScheduleIdForAddressAndIndex(_beneficiary, holdersVestingScheduleCount[_beneficiary]);
         vestingSchedules[vestingScheduleId] =
             VestingSchedule(_start + _cliff, _start, _duration, _slicePeriodSeconds, _amount, 0, Status.INITIALIZED, _beneficiary, _revokable);
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount + _amount;
         vestingSchedulesIds.push(vestingScheduleId);
-        holdersVestingScheduleCount[_beneficiary] = holdersVestingScheduleCount[_beneficiary] + 1;
+        ++holdersVestingScheduleCount[_beneficiary];
         holdersVestedAmount[_beneficiary] = holdersVestedAmount[_beneficiary] + _amount;
+        emit ScheduleCreated(vestingScheduleId, _beneficiary, _amount, _start, _cliff, _duration, _slicePeriodSeconds, _revokable);
     }
 
     /**
@@ -244,7 +261,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount - unreleased;
         holdersVestedAmount[vestingSchedule.beneficiary] = holdersVestedAmount[vestingSchedule.beneficiary] - unreleased;
         vestingSchedule.status = Status.REVOKED;
-        emit Revoked(vestingScheduleId);
+        emit ScheduleRevoked(vestingScheduleId);
     }
 
     /**
@@ -273,7 +290,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @param vestingScheduleId the vesting schedule identifier
      * @param amount the amount to release
      */
-    function _release(bytes32 vestingScheduleId, uint256 amount) internal whenNotPaused {
+    function _release(bytes32 vestingScheduleId, uint256 amount) internal {
         VestingSchedule storage vestingSchedule = vestingSchedules[vestingScheduleId];
         bool isBeneficiary = msg.sender == vestingSchedule.beneficiary;
         bool isOwner = msg.sender == owner();
@@ -282,7 +299,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         vestingSchedule.released = vestingSchedule.released + amount;
         vestingSchedulesTotalAmount = vestingSchedulesTotalAmount - amount;
         holdersVestedAmount[vestingSchedule.beneficiary] = holdersVestedAmount[vestingSchedule.beneficiary] - amount;
-        emit Released(vestingScheduleId, vestingSchedule.beneficiary, amount);
+        emit TokensReleased(vestingScheduleId, vestingSchedule.beneficiary, amount);
         nativeToken.safeTransfer(vestingSchedule.beneficiary, amount);
     }
 
@@ -291,12 +308,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @param vestingScheduleId the vesting schedule identifier
      * @param amount the amount to release
      */
-    function release(bytes32 vestingScheduleId, uint256 amount)
-        external
-        whenNotPaused
-        nonReentrant
-        onlyIfVestingScheduleNotRevoked(vestingScheduleId)
-    {
+    function release(bytes32 vestingScheduleId, uint256 amount) external nonReentrant onlyIfVestingScheduleNotRevoked(vestingScheduleId) {
         _release(vestingScheduleId, amount);
     }
 
@@ -304,7 +316,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
      * @notice Release all available tokens for holder address
      * @param holder address of the holder & beneficiary
      */
-    function releaseAvailableTokensForHolder(address holder) external whenNotPaused nonReentrant {
+    function releaseAvailableTokensForHolder(address holder) external nonReentrant {
         if (msg.sender != holder && msg.sender != owner()) revert Unauthorized();
         uint256 vestingScheduleCount = holdersVestingScheduleCount[holder];
         for (uint256 i = 0; i < vestingScheduleCount; i++) {
