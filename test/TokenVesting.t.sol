@@ -218,6 +218,17 @@ contract TokenVestingTest is Test {
 
         tokenVesting.withdraw(50 ether);
         assertEq(tokenVesting.getWithdrawableAmount(), 0);
+
+        vm.stopPrank();
+
+        // Alice can't release more tokens
+        vm.warp(baseTime + duration);
+        vm.startPrank(alice);
+        vm.expectRevert(TokenVesting.ScheduleWasRevoked.selector);
+        tokenVesting.release(vestingScheduleId, 50 ether);
+        vm.stopPrank();
+
+        assertEq(token.balanceOf(address(alice)), 50 ether);
     }
 
     function testScheduleIndexComputation() public {
