@@ -36,7 +36,8 @@ The beneficiaries can later claim their schedules by providing a Merkle proof of
 Please make sure you validate the different vesting schedule inputs (duration, amount, etc.), before you create your Merkle Tree. Calling `claimSchedule` with invalid inputs will revert and render the vesting schedule unclaimable for the beneficiary.
 
 ## 🎭🧑‍💻 Security audit
-The smart contracts in this repository have been audited in April 2023. You can find the audit report [here](https://github.com/pashov/audits/blob/master/solo/MoleculeVesting-security-review.md) and also in the [audits](/audits) folder of this repository.
+
+This repository's smart contracts underwent an audit in April 2023, and the audit report is available [here](https://github.com/pashov/audits/blob/master/solo/MoleculeVesting-security-review.md) and in the "[audits](/audits)" folder of the repository.
 
 ## ⚠️ Important notes and caveats
 Please read the following notes carefully before using this contract. They are important to understand the limitations of this contract and how to use it properly.
