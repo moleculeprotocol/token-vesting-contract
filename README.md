@@ -39,6 +39,9 @@ Please make sure you validate the different vesting schedule inputs (duration, a
 - `releaseAvailableTokensForHolder` function to release all available tokens for a beneficiary (especially relevant if the beneficiary has multiple vesting schedules)
 - `setPaused` function to globally pause token releases and claiming schedules (the latter only in the case of using `TokenVestingMerkle`). Uses OpenZepplin's `Pausable` contract. The main use case for this is a) as a safety measure in case of an emergency and b) to launch the contract in a paused state and unpause it once the DAO or organization has launched and everything is ready for people to start releasing their tokens.
 
+## 🎭🧑‍💻 Security audit
+The smart contracts in this repository have been audited in April 2023. You can find the audit report [here](https://github.com/pashov/audits/blob/master/solo/MoleculeVesting-security-review.md) and also in the `audit` folder of this repository. 
+
 ## ⚠️ Important notes and caveats
 Please read the following notes carefully before using this contract. They are important to understand the limitations of this contract and how to use it properly.
 
