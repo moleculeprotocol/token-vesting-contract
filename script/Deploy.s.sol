@@ -12,8 +12,7 @@ contract DeployScript is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        // Set the address of the native token here
-        address nativeToken = 0x9A66cea9d042394f2a2ccbE9a0635cac7CeE5219;
+        address nativeToken = vm.envAddress("NATIVE_TOKEN_ADDRESS");
 
         TokenVesting tokenVesting = new TokenVesting(IERC20Metadata(nativeToken), "Virtual Test Token", "vTT");
 

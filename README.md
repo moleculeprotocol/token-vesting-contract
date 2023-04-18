@@ -36,7 +36,7 @@ The beneficiaries can later claim their schedules by providing a Merkle proof of
 Please make sure you validate the different vesting schedule inputs (duration, amount, etc.), before you create your Merkle Tree. Calling `claimSchedule` with invalid inputs will revert and render the vesting schedule unclaimable for the beneficiary.
 
 ## 🎭🧑‍💻 Security audit
-The smart contracts in this repository have been audited in April 2023. You can find the audit report [here](https://github.com/pashov/audits/blob/master/solo/MoleculeVesting-security-review.md) and also in the `audit` folder of this repository. 
+The smart contracts in this repository have been audited in April 2023. You can find the audit report [here](https://github.com/pashov/audits/blob/master/solo/MoleculeVesting-security-review.md) and also in the `audit` folder of this repository.
 
 ## ⚠️ Important notes and caveats
 Please read the following notes carefully before using this contract. They are important to understand the limitations of this contract and how to use it properly.
@@ -98,7 +98,7 @@ forge script script/Dev.s.sol:DevScript --fork-url $ANVIL_RPC_URL --broadcast -v
 ### Testnet
 
 - Make sure you have set your environment variables in `.env`
-- Take a look at `script/deploy.s.sol` and set the address of the native token that you want to use for your token vesting contract (`nativeToken`)
+- Important: Don't forget to set `NATIVE_TOKEN_ADDRESS` in `.env` to the address of the native token you want to use for vesting.
 - Run the command below to deploy to Goerli testnet:
 
 ```console
