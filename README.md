@@ -90,7 +90,7 @@ forge test -vv
 - Anvil is a local testnet node shipped with Foundry. You can use it for testing your contracts from frontends or for interacting over RPC.
 - Run `anvil -h 0.0.0.0` in a terminal window and keep it running
 
-To just deploy all contracts using the default mnemonic's first account, run (remember to run `source .env` beforehand):
+To just deploy all contracts using the default mnemonic's first account, run:
 
 ```console
 forge script script/Dev.s.sol:DevScript --fork-url $ANVIL_RPC_URL --broadcast -vvvv
