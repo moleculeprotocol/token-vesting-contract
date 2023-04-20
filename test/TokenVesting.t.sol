@@ -141,6 +141,29 @@ contract TokenVestingTest is Test {
        */
     }
 
+    function testVestingWithCliff() public {
+        uint256 baseTime = block.timestamp;
+        uint256 duration = 4 * (365 days);
+        uint256 cliff = 1 * (365 days);
+
+        vm.startPrank(deployer);
+        token.transfer(address(tokenVesting), 100 ether);
+        tokenVesting.createVestingSchedule(alice, baseTime, cliff, duration, 1, true, 100 ether);
+        vm.stopPrank();
+
+        bytes32 vestingScheduleId = tokenVesting.computeVestingScheduleIdForAddressAndIndex(alice, 0);
+
+        assertEq(tokenVesting.computeReleasableAmount(vestingScheduleId), 0);
+
+        vm.warp(block.timestamp + cliff);
+
+        assertEq(tokenVesting.computeReleasableAmount(vestingScheduleId), 25 ether);
+
+        vm.warp(block.timestamp + duration);
+
+        assertEq(tokenVesting.computeReleasableAmount(vestingScheduleId), 100 ether);
+    }
+
     function testNonOwnerCannotRevokeSchedule() public {
         uint256 baseTime = block.timestamp + 1 weeks;
         uint256 duration = 4 weeks;
