@@ -199,6 +199,18 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         _createVestingSchedule(_beneficiary, _start, _cliff, _duration, _slicePeriodSeconds, _revokable, _amount);
     }
 
+    function createPublicVestingSchedule(
+        address _beneficiary,
+        uint256 _start,
+        uint256 _cliff,
+        uint256 _duration,
+        uint256 _slicePeriodSeconds,
+        uint256 _amount
+    ) external {
+        nativeToken.safeTransferFrom(msg.sender, address(this), _amount);
+        _createVestingSchedule(_beneficiary, _start, _cliff, _duration, _slicePeriodSeconds, false, _amount);
+    }
+
     /**
      * @notice Creates a new vesting schedule for a beneficiary.
      * @param _beneficiary address of the beneficiary to whom vested tokens are transferred
