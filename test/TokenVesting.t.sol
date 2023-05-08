@@ -117,6 +117,7 @@ contract TokenVestingTest is Test {
         // check that the number of released tokens is 100
         vestingSchedule = tokenVesting.getVestingSchedule(vestingScheduleId);
         assertEq(vestingSchedule.released, 100 ether);
+        assertEq(token.balanceOf(alice), 100 ether);
 
         // check that the vested amount is 0
         assertEq(tokenVesting.computeReleasableAmount(vestingScheduleId), 0 ether);
@@ -155,17 +156,20 @@ contract TokenVestingTest is Test {
 
         assertEq(tokenVesting.computeReleasableAmount(vestingScheduleId), 0);
 
-        vm.warp(block.timestamp + cliff);
+        // One day before cliff ends
+        vm.warp(baseTime + cliff - 1 days);
+        assertEq(tokenVesting.computeReleasableAmount(vestingScheduleId), 0);
 
+        // cliff has ended
+        vm.warp(baseTime + cliff);
         assertEq(tokenVesting.computeReleasableAmount(vestingScheduleId), 25 ether);
 
         vm.warp(block.timestamp + duration);
-
         assertEq(tokenVesting.computeReleasableAmount(vestingScheduleId), 100 ether);
     }
 
     function testNonOwnerCannotRevokeSchedule() public {
-        uint256 baseTime = block.timestamp + 1 weeks;
+        uint256 baseTime = block.timestamp;
         uint256 duration = 4 weeks;
 
         vm.startPrank(deployer);
@@ -182,7 +186,7 @@ contract TokenVestingTest is Test {
     }
 
     function testCanOnlyBeRevokedIfRevokable() public {
-        uint256 baseTime = block.timestamp + 1 weeks;
+        uint256 baseTime = block.timestamp;
         uint256 duration = 4 weeks;
 
         vm.startPrank(deployer);
@@ -197,7 +201,7 @@ contract TokenVestingTest is Test {
     }
 
     function testNonOwnerCannotCreateSchedule() public {
-        uint256 baseTime = block.timestamp + 1 weeks;
+        uint256 baseTime = block.timestamp;
         uint256 duration = 4 weeks;
 
         vm.startPrank(deployer);
@@ -261,7 +265,7 @@ contract TokenVestingTest is Test {
     }
 
     function testTextInputParameterChecks() public {
-        uint256 baseTime = block.timestamp + 1 weeks;
+        uint256 baseTime = block.timestamp;
         uint256 duration = 4 weeks;
 
         vm.startPrank(deployer);
