@@ -202,7 +202,7 @@ contract TokenVestingTest is Test {
     }
 
     function testOnlySchedulerRoleCanCreateSchedule() public {
-        uint256 baseTime = block.timestamp + 1 weeks;
+        uint256 baseTime = block.timestamp;
         uint256 duration = 4 weeks;
 
         vm.startPrank(deployer);
