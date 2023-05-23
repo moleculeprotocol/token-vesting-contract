@@ -7,6 +7,7 @@ import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/I
 
 import { Token } from "../contracts/test/Token.sol";
 import { TokenVesting } from "../contracts/TokenVesting.sol";
+import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
 
 contract TokenVestingTest is Test {
     Token internal token;
@@ -200,7 +201,7 @@ contract TokenVestingTest is Test {
         vm.stopPrank();
     }
 
-    function testNonOwnerCannotCreateSchedule() public {
+    function testOnlySchedulerRoleCanCreateSchedule() public {
         uint256 baseTime = block.timestamp;
         uint256 duration = 4 weeks;
 
@@ -208,7 +209,15 @@ contract TokenVestingTest is Test {
         token.transfer(address(tokenVesting), 100 ether);
         vm.stopPrank();
         vm.startPrank(alice);
-        vm.expectRevert("Ownable: caller is not the owner");
+
+        bytes memory expectedError = abi.encodePacked(
+            "AccessControl: account ",
+            Strings.toHexString(alice),
+            " is missing role ",
+            Strings.toHexString(uint256(tokenVesting.ROLE_CREATE_SCHEDULE()))
+        );
+
+        vm.expectRevert(expectedError);
         tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
         vm.stopPrank();
     }

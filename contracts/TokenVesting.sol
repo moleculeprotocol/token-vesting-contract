@@ -3,6 +3,8 @@
 pragma solidity 0.8.18;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
+import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
+
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
@@ -20,7 +22,7 @@ import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
 /// and was extended with the virtual token functionality and partially rewritten.
 /// @author Schmackofant - schmackofant@protonmail.com
 
-contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
+contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable, AccessControl {
     using SafeERC20 for IERC20Metadata;
 
     /// @notice The ERC20 name of the virtual token
@@ -80,6 +82,8 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
     /// @dev This mapping is used to keep track of the total amount of vested tokens for each beneficiary
     mapping(address => uint256) private holdersVestedAmount;
 
+    bytes32 public constant ROLE_CREATE_SCHEDULE = keccak256("ROLE_CREATE_SCHEDULE");
+
     event ScheduleCreated(
         bytes32 indexed scheduleId,
         address indexed beneficiary,
@@ -134,6 +138,8 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         if (nativeToken.decimals() != 18) revert DecimalsError();
         name = _name;
         symbol = _symbol;
+        _grantRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        _grantRole(ROLE_CREATE_SCHEDULE, _msgSender());
     }
 
     /// @dev All types of transfers are permanently disabled.
@@ -195,7 +201,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable {
         uint256 _slicePeriodSeconds,
         bool _revokable,
         uint256 _amount
-    ) external onlyOwner {
+    ) external onlyRole(ROLE_CREATE_SCHEDULE) {
         _createVestingSchedule(_beneficiary, _start, _cliff, _duration, _slicePeriodSeconds, _revokable, _amount);
     }
 
