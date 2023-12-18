@@ -234,7 +234,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable, Acc
 
         if (_amount == 0) revert InvalidAmount();
 
-        // _slicePeriodSeconds should be at least 60 seconds
+        // _slicePeriodSeconds should be 60 seconds maximum
         if (_slicePeriodSeconds == 0 || _slicePeriodSeconds > 60) revert InvalidSlicePeriod();
 
         // _duration must be longer than _cliff
