@@ -4,7 +4,8 @@ pragma solidity ^0.8.18;
 import "forge-std/Test.sol";
 import { console } from "forge-std/console.sol";
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
-
+import {IAccessControl} from '@openzeppelin/contracts/access/IAccessControl.sol';
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { Token } from "../contracts/test/Token.sol";
 import { TokenVesting } from "../contracts/TokenVesting.sol";
 import { Strings } from "@openzeppelin/contracts/utils/Strings.sol";
@@ -181,7 +182,7 @@ contract TokenVestingTest is Test {
         bytes32 vestingScheduleId = tokenVesting.computeVestingScheduleIdForAddressAndIndex(alice, 0);
 
         vm.startPrank(bob);
-        vm.expectRevert("Ownable: caller is not the owner");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, bob));
         tokenVesting.revoke(vestingScheduleId);
         vm.stopPrank();
     }
@@ -209,15 +210,9 @@ contract TokenVestingTest is Test {
         token.transfer(address(tokenVesting), 100 ether);
         vm.stopPrank();
         vm.startPrank(alice);
-
-        bytes memory expectedError = abi.encodePacked(
-            "AccessControl: account ",
-            Strings.toHexString(alice),
-            " is missing role ",
-            Strings.toHexString(uint256(tokenVesting.ROLE_CREATE_SCHEDULE()))
+        vm.expectRevert(
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, alice, tokenVesting.ROLE_CREATE_SCHEDULE())
         );
-
-        vm.expectRevert(expectedError);
         tokenVesting.createVestingSchedule(alice, baseTime, 0, duration, 1, true, 100 ether);
         vm.stopPrank();
     }

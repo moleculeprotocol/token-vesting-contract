@@ -1,14 +1,14 @@
 // contracts/TokenVesting.sol
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity 0.8.18;
+pragma solidity 0.8.24;
 
 import { IERC20Metadata } from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import { AccessControl } from "@openzeppelin/contracts/access/AccessControl.sol";
 
 import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import { ReentrancyGuard } from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
-import { Pausable } from "@openzeppelin/contracts/security/Pausable.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 
 /// @title TokenVesting - On-Chain vesting scheme enabled by smart contracts.
 /// The TokenVesting contract can release its token balance gradually like a
@@ -133,7 +133,7 @@ contract TokenVesting is IERC20Metadata, Ownable, ReentrancyGuard, Pausable, Acc
      * @param _name name of the virtual token
      * @param _symbol symbol of the virtual token
      */
-    constructor(IERC20Metadata token_, string memory _name, string memory _symbol) {
+    constructor(IERC20Metadata token_, string memory _name, string memory _symbol) Ownable(msg.sender) {
         nativeToken = token_;
         if (nativeToken.decimals() != 18) revert DecimalsError();
         name = _name;
