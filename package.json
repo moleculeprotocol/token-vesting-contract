@@ -1,0 +1,26 @@
+{
+  "name": "@bioxyz/token-vesting-contract",
+  "version": "1.1.0",
+  "description": "ERC20 token vesting smart contract with added virtual token functionality.",
+  "author": "bio.xyz Community <info@bio.xyz>",
+  "license": "Apache-2.0",
+  "files": [
+    "/contracts/**/*.sol"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/moleculeprotocol/token-vesting-contract.git"
+  },
+  "keywords": [
+    "solidity",
+    "ethereum",
+    "smart",
+    "contracts",
+    "vesting",
+    "token",
+    "erc20"
+  ],
+  "bugs": {
+    "url": "https://github.com/moleculeprotocol/token-vesting-contract/issues"
+  }
+}
