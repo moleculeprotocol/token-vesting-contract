@@ -37,7 +37,7 @@ Please make sure you validate the different vesting schedule inputs (duration, a
 
 ## 🎭🧑‍💻 Security audit
 
-This repository's smart contracts underwent an audit in April 2023, and the audit report is available [here](https://github.com/pashov/audits/blob/master/solo/MoleculeVesting-security-review.md) and in the "[audits](/audits)" folder of the repository.
+This repository's smart contracts underwent an audit in April 2023, and the audit report is available [here](https://github.com/pashov/audits/blob/master/solo/pdf/MoleculeVesting-security-review.pdf) and in the "[audits](/audits)" folder of the repository.
 
 ## ⚠️ Important notes and caveats
 Please read the following notes carefully before using this contract. They are important to understand the limitations of this contract and how to use it properly.
